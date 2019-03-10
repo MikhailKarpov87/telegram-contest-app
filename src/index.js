@@ -1,193 +1,116 @@
-"use strict";
-
-const { PI, cos, sin, abs, sqrt, pow, floor, round, random, atan2 } = Math;
-const HALF_PI = 0.5 * PI;
-const TAU = 2 * PI;
-const TO_RAD = PI / 180;
-const rand = n => n * random();
-const randIn = (min, max) => rand(max - min) + min;
-const randRange = n => n - rand(2 * n);
-const fadeIn = (t, m) => t / m;
-const fadeOut = (t, m) => (m - t) / m;
-const fadeInOut = (t, m) => {
-  let hm = 0.5 * m;
-  return abs(((t + hm) % m) - hm) / hm;
-};
-const dist = (x1, y1, x2, y2) => sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-const angle = (x1, y1, x2, y2) => atan2(y2 - y1, x2 - x1);
-const lerp = (n1, n2, speed) => (0.6 - speed) * n1 + speed * n2;
-
-const particleCount = 1000;
-const spawnRadius = 800;
-const noiseSteps = 6;
+import maxBy from "lodash/maxBy";
+import minBy from "lodash/minBy";
 
 let canvas;
 let ctx;
-let center;
-let tick;
-let simplex;
-let positions;
-let velocities;
-let lifeSpans;
-let sizes;
-let hues;
-let speeds;
+let chart;
+
+const data = [
+  { date: "21-12-2018", joined: 134, left: 13 },
+  { date: "22-12-2018", joined: 45, left: 32 },
+  { date: "23-12-2018", joined: 12, left: 123 },
+  { date: "24-12-2018", joined: 110, left: 41 },
+  { date: "25-12-2018", joined: 230, left: 10 },
+  { date: "26-12-2018", joined: 134, left: 45 },
+  { date: "27-12-2018", joined: 87, left: 12 },
+  { date: "28-12-2018", joined: 12, left: 76 }
+];
+
+const data2 = [
+  { date: "21-12-2018", joined: 134, left: 13 },
+  { date: "22-12-2018", joined: 45, left: 32 },
+  { date: "23-12-2018", joined: 12, left: 123 },
+  { date: "24-12-2018", joined: 110, left: 41 },
+  { date: "25-12-2018", joined: 337, left: 10 },
+  { date: "26-12-2018", joined: 134, left: 45 },
+  { date: "27-12-2018", joined: 87, left: 12 },
+  { date: "28-12-2018", joined: 12, left: 76 }
+];
 
 function setup() {
-  tick = 0;
-  center = [];
+  chart = {};
   createCanvas();
-  createParticles();
-  draw();
-}
 
-function createParticles() {
-  simplex = new SimplexNoise();
-  positions = new Float32Array(particleCount * 4);
-  velocities = new Float32Array(particleCount * 4);
-  lifeSpans = new Float32Array(particleCount * 4);
-  speeds = new Float32Array(particleCount);
-  hues = new Float32Array(particleCount);
-  sizes = new Float32Array(particleCount);
-
-  let i;
-
-  for (i = 0; i < particleCount * 4; i += 2) {
-    initParticle(i);
-  }
-}
-
-function initParticle(i) {
-  let iy, ih, rd, rt, cx, sy, x, y, s, rv, vx, vy, t, h, si, l, ttl;
-
-  iy = i + 1;
-  ih = (0.5 * i) | 0;
-  rd = rand(spawnRadius);
-  rt = 0.1;
-  cx = cos(rt);
-  sy = sin(rt);
-  x = center[0] + cx * rd;
-  y = center[1] + sy * rd;
-  rv = randIn(0.1, 1);
-  s = randIn(1, 2);
-  vx = rv * cx * 0.1;
-  vy = rv * sy * 0.1;
-  si = randIn(0.1, 2);
-  h = randIn(160, 180);
-  l = 0;
-  ttl = randIn(2000, 4000);
-
-  positions[i] = x;
-  positions[iy] = y;
-  velocities[i] = vx;
-  velocities[iy] = vy;
-  hues[ih] = h;
-  sizes[ih] = si;
-  speeds[ih] = s;
-  lifeSpans[i] = l;
-  lifeSpans[iy] = ttl;
-}
-
-function drawParticle(i) {
-  let iy, ih, x, y, n, tx, ty, s, vx, vy, h, si, l, dl, ttl, c;
-
-  iy = i + 1;
-  ih = (0.5 * i) | 0;
-  x = positions[i];
-  y = positions[iy];
-  n = simplex.noise3D(x * 0.0025, y * 0.0025, tick * 0.001) * TAU;
-  vx = lerp(velocities[i], cos(n * noiseSteps), 0.05);
-  vy = lerp(velocities[iy], sin(n * noiseSteps), 0.05);
-  s = speeds[ih];
-  tx = x + vx * s;
-  ty = y + vy * s;
-  h = hues[ih];
-  si = sizes[ih];
-  l = lifeSpans[i];
-  ttl = lifeSpans[iy];
-  dl = fadeInOut(l, ttl);
-  c = `hsla(${h},60%,60%,${dl})`;
-
-  l++;
-
-  ctx.a.save();
-  ctx.a.lineWidth = dl * si + 1;
-  ctx.a.strokeStyle = c;
-  ctx.a.beginPath();
-  ctx.a.moveTo(x, y);
-  ctx.a.lineTo(tx, ty);
-  ctx.a.stroke();
-  ctx.a.closePath();
-  ctx.a.restore();
-
-  positions[i] = tx;
-  positions[iy] = ty;
-  velocities[i] = vx;
-  velocities[iy] = vy;
-  lifeSpans[i] = l;
-
-  (checkBounds(x, y) || l > ttl) && initParticle(i);
-}
-
-function checkBounds(x, y) {
-  return x > canvas.a.width || x < 0 || y > canvas.a.height || y < 0;
+  drawGridLines();
+  drawChart();
+  drawAxis(data);
 }
 
 function createCanvas() {
-  canvas = {
-    a: document.createElement("canvas"),
-    b: document.createElement("canvas")
-  };
-  canvas.b.style = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+  canvas = document.createElement("canvas");
+  document.getElementById("app").appendChild(canvas);
+  canvas.style = `
+            width: 95%;
         `;
-  document.body.appendChild(canvas.b);
-  ctx = {
-    a: canvas.a.getContext("2d"),
-    b: canvas.b.getContext("2d")
-  };
+  ctx = canvas.getContext("2d");
+  ctx.translate(0.5, 0.5);
   resize();
 }
 
 function resize() {
   const { innerWidth, innerHeight } = window;
 
-  canvas.a.width = canvas.b.width = innerWidth;
-  canvas.a.height = canvas.b.height = innerHeight;
-  center[0] = 0.3 * innerWidth;
-  center[1] = 0.5 * innerHeight;
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  chart.minW = 0.05 * innerWidth;
+  chart.maxW = 0.95 * innerWidth;
+  chart.minH = 0.05 * innerHeight;
+  chart.maxH = 0.95 * innerHeight;
+  chart.width = innerWidth * 0.9;
+  chart.height = innerHeight * 0.9;
 }
 
-function draw() {
-  tick++;
-  ctx.a.clearRect(0, 0, canvas.a.width, canvas.a.height);
+function getYAxisMaxValue(max) {
+  const divider = Math.max(10, 10 ** (max.toString().length - 1));
+  const closestMax = Math.ceil(max / divider) * divider;
+  const maxValue = Math.max(closestMax, Math.round(max / divider) * divider);
 
-  ctx.b.fillStyle = "rgba(0,0,0,0.1)";
-  ctx.b.fillRect(0, 0, canvas.b.width, canvas.b.height);
+  // console.log(max + " = divider:" + divider + ", " + maxValue);
+  return maxValue;
+}
 
-  let i;
+function drawAxis() {
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(chart.minW, chart.maxH);
+  ctx.lineTo(chart.maxW, chart.maxH);
+  ctx.strokeStyle = "#ECF0F3";
+  ctx.stroke();
+}
 
-  for (i = 0; i < particleCount * 4; i += 4) {
-    drawParticle(i);
+function drawLegend() {}
+
+function drawGridLines() {
+  const maxNum = maxBy(data, "joined").joined;
+  const maxValueY = getYAxisMaxValue(maxNum);
+  console.log(maxNum);
+  ctx.font = "20px";
+  ctx.strokeStyle = "#ECF0F3";
+  ctx.fillStyle = "#96A2AA";
+
+  for (let i = 1; i <= 5; i++) {
+    const height = chart.maxH - (i * chart.height) / 5;
+    const currentValue = (maxValueY * i) / 5;
+    ctx.fillText(currentValue, chart.minW, height - chart.height * 0.02);
+    ctx.beginPath();
+    ctx.moveTo(chart.minW, height);
+    ctx.lineTo(chart.maxW, height);
+    ctx.stroke();
   }
 
-  ctx.b.save();
-  // ctx.b.filter = "blur(1px)";
-  ctx.b.globalCompositeOperation = "lighten";
-  ctx.b.drawImage(canvas.a, 0, 0);
-  ctx.b.restore();
+  ctx.fillText(0, chart.minW, chart.maxH - chart.height * 0.02);
+}
 
-  ctx.b.save();
-  ctx.b.globalCompositeOperation = "lighter";
-  ctx.b.drawImage(canvas.a, 0, 0);
-  ctx.b.restore();
-
-  window.requestAnimationFrame(draw);
+function drawChart() {
+  ctx.beginPath();
+  ctx.moveTo(chart.minW, chart.maxH);
+  ctx.lineTo(canvas.width * 0.2, canvas.height * 0.3);
+  ctx.lineTo(canvas.width * 0.3, canvas.height * 0.6);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#3CC23F";
+  ctx.lineWidth = 4;
+  ctx.stroke();
 }
 
 window.addEventListener("load", setup);
-window.addEventListener("resize", resize);
+// window.addEventListener("resize", resize);
