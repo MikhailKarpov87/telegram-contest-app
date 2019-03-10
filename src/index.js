@@ -1,4 +1,6 @@
 import maxBy from "lodash/maxBy";
+import minBy from "lodash/minBy";
+
 import {
   axisFontColor,
   axisLinesColor,
@@ -6,7 +8,10 @@ import {
   leftColor,
   data,
   months,
-  chartFontSize
+  chartFontSize,
+  bgColorDay,
+  bgColorNight,
+  hoverLineColor
 } from "./constants";
 
 let canvas,
@@ -18,7 +23,9 @@ let canvas,
   maxValueY,
   totalValues,
   showJoined,
-  showLeft;
+  showLeft,
+  currentItemsPositions,
+  hoverItem;
 let dpi = window.devicePixelRatio;
 
 function fix_dpi() {
@@ -42,9 +49,11 @@ function fix_dpi() {
 }
 
 const checkboxes = document.querySelectorAll("input[type=checkbox]");
+
 checkboxes.forEach(function(el) {
   el.addEventListener("change", onCheckboxChange);
 });
+
 showJoined = checkboxes[0].checked;
 showLeft = checkboxes[1].checked;
 
@@ -56,6 +65,25 @@ function onCheckboxChange(e) {
   }
 
   update();
+}
+function onMouseMove(e) {
+  const { x, y } = e;
+  const rect = canvas.getBoundingClientRect();
+  const xPos = x - Math.round(rect.left);
+  const yPos = y - Math.round(rect.top);
+
+  if (yPos < chart.maxH && yPos > chart.minH && xPos > chart.minW && xPos < chart.maxW) {
+    // console.log(y - Math.round(rect.top));
+    hoverItem = findClosestItem(xPos);
+    requestAnimationFrame(update);
+  }
+}
+
+function findClosestItem(x) {
+  const closestItem = currentItemsPositions
+    .map(value => Math.abs(value - x))
+    .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
+  return closestItem;
 }
 
 function setup() {
@@ -69,12 +97,26 @@ function setup() {
 
   maxValueY = getYAxisMaxValue(maxNum);
   totalValues = data.length;
+  currentItemsPositions = getItemsPositions();
 
   drawGridLines();
   drawDatesLegend(data);
   showJoined && drawChart(data, joinedColor);
   showLeft && drawChart(data, joinedColor);
   drawAxis(data);
+}
+
+function getItemsPositions() {
+  let positions = [];
+  positions[0] = chart.minW;
+
+  const spaceBetween = Math.round(chart.width / totalValues);
+
+  for (let i = 1; i < totalValues; i++) {
+    positions[i] = positions[i - 1] + spaceBetween;
+  }
+
+  return positions;
 }
 
 function update() {
@@ -84,17 +126,21 @@ function update() {
   if (maxNum === 0) return;
   maxValueY = getYAxisMaxValue(maxNum);
   totalValues = data.length;
+  currentItemsPositions = getItemsPositions();
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGridLines();
   drawDatesLegend(data);
   showJoined && drawChart(data, "joined", joinedColor);
   showLeft && drawChart(data, "left", leftColor);
+
   drawAxis(data);
+  hoverItem && drawHoveredItem();
 }
 
 function createCanvas() {
   canvas = document.createElement("canvas");
+  canvas.addEventListener("mousemove", onMouseMove);
   canvas.id = "main_chart";
   document.getElementById("app").appendChild(canvas);
   canvas.style = `
@@ -110,10 +156,10 @@ function resize() {
   console.log(innerWidth + ";" + innerHeight + ";" + dpi);
   canvas.width = innerWidth;
   canvas.height = innerHeight * dpi;
-  chart.minW = 0.05 * innerWidth;
-  chart.maxW = 0.95 * innerWidth;
-  chart.minH = 0.05 * innerHeight;
-  chart.maxH = 0.95 * innerHeight;
+  chart.minW = Math.round(0.05 * innerWidth);
+  chart.maxW = Math.round(0.95 * innerWidth);
+  chart.minH = Math.round(0.05 * innerHeight);
+  chart.maxH = Math.round(0.95 * innerHeight);
   chart.width = innerWidth;
   chart.height = innerHeight;
   fix_dpi();
@@ -142,7 +188,6 @@ function drawDatesLegend(data) {
 
   data.map((value, i) => {
     const pos = chart.minW + (i * chart.width) / totalValues;
-    console.log(value.date);
     const date = new Date(value.date);
     const label = months[date.getMonth()] + " " + date.getDate();
     ctx.fillText(label, pos, chart.maxH + chart.height * 0.03);
@@ -173,13 +218,24 @@ function drawChart(data, type, color) {
   data.map((value, i) => {
     const y = chart.height - ((value[type] / maxValueY) * chart.height + chart.minH);
     const x = chart.minW + (i / totalValues) * chart.width;
-    console.log(value[type] + "|" + x + "|" + y);
+    // console.log(value[type] + "|" + x + "|" + y);
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
 
   ctx.lineCap = "round";
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function drawHoveredItem() {
+  const x = chart.minW + (hoverItem / totalValues) * chart.width;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = hoverLineColor;
+  ctx.beginPath();
+  ctx.moveTo(x, chart.maxH);
+  ctx.lineTo(x, chart.minH);
+
   ctx.stroke();
 }
 
