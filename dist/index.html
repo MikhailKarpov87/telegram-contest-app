@@ -8,11 +8,23 @@
       body {
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       }
+      h2 {
+        margin-left: 5vw;
+      }
+      .controls {
+        margin-left: 5vw;
+      }
     </style>
     <title>Telegram Chart</title>
   </head>
   <body>
-    <div class="app" id="app" style="margin: 0 auto;"></div>
+    <div class="app" id="app">
+      <h2>Followers</h2>
+    </div>
+    <div class="controls">
+      Joined <input type="checkbox" name="joined_checkbox" checked /> Left
+      <input type="checkbox" name="left_checkbox" checked />
+    </div>
     <script src="main.js"></script>
   </body>
 </html>
