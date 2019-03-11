@@ -26,7 +26,6 @@
     "webpack-dev-server": "^3.2.1"
   },
   "dependencies": {
-    "dotenv-webpack": "^1.7.0",
-    "lodash": "^4.17.11"
+    "dotenv-webpack": "^1.7.0"
   }
 }
