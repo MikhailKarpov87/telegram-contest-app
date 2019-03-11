@@ -1,25 +1,37 @@
 import MainChart from "./main_chart";
+import { loadData } from "./helpers";
 
-const checkboxes = document.querySelectorAll("input[type=checkbox]");
+loadData("http://localhost:3000/chart_data.json").then(data => initApp(data));
 
-checkboxes.forEach(function(el) {
-  el.addEventListener("change", onCheckboxChange);
-});
+function initApp(data) {
+  console.log(data);
 
-let showJoined = checkboxes[0].checked;
-let showLeft = checkboxes[1].checked;
-
-const mainChart = new MainChart();
-
-function onCheckboxChange(e) {
-  if (e.target.name === "joined_checkbox") {
-    showJoined = e.target.checked;
-  } else {
-    showLeft = e.target.checked;
+  let selectedLines = [];
+  const lines = data.names;
+  for (let name in lines) {
+    const inputDiv = document.getElementById("controls");
+    const checkbox = document.createElement("input");
+    const checkboxText = document.createTextNode(lines[name]);
+    checkbox.type = "checkbox";
+    checkbox.name = name;
+    checkbox.checked = "true";
+    selectedLines.push(name);
+    inputDiv.appendChild(checkboxText);
+    inputDiv.appendChild(checkbox);
+    checkbox.addEventListener("change", onCheckboxChange);
   }
 
-  mainChart.update({ showJoined, showLeft });
-}
+  const mainChart = new MainChart(data, selectedLines);
 
-window.addEventListener("load", () => mainChart.setup({ showJoined, showLeft }));
-window.addEventListener("resize", mainChart.resize);
+  function onCheckboxChange(e) {
+    const { checked, name } = e.target;
+    checked && !selectedLines.includes(name) && selectedLines.push(name);
+    !checked &&
+      selectedLines.includes(name) &&
+      selectedLines.splice(selectedLines.indexOf(name), 1);
+    mainChart.update(data, selectedLines);
+  }
+
+  window.addEventListener("load", () => mainChart.setup(data, selectedLines));
+  window.addEventListener("resize", mainChart.resize);
+}

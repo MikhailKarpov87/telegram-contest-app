@@ -3,17 +3,22 @@ import {
   axisLinesColor,
   joinedColor,
   leftColor,
-  data,
   months,
+  data,
   chartFontSize,
   bgColorDay,
   bgColorNight,
   hoverLineColor
 } from "./constants";
 
-import { maxBy, findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
+import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
 
 class MainChart {
+  constructor(data, selectedLines) {
+    this.data = data;
+    this.selectedLines = selectedLines;
+  }
+
   setup = ({ showJoined, showLeft }) => {
     this.chart = {};
     this.dpi = window.devicePixelRatio;
@@ -29,7 +34,7 @@ class MainChart {
 
     this.resize();
     this.fix_dpi();
-    this.update({ showJoined, showLeft });
+    this.update();
   };
 
   fix_dpi = () => {
@@ -53,23 +58,21 @@ class MainChart {
     this.ctx.scale(this.dpi, this.dpi);
   };
 
-  update = ({ showJoined, showLeft }) => {
-    this.maxJoinedNum = showJoined ? maxBy(data, "joined").joined : 0;
-    this.maxLeftNum = showLeft ? maxBy(data, "left").left : 0;
-    this.maxNum = Math.max(this.maxJoinedNum, this.maxLeftNum);
+  update = () => {
+    const data = this.data;
+    this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
     if (this.maxNum === 0) return;
 
     this.maxValueY = getYAxisMaxValue(this.maxNum);
-    this.itemsNum = data.length;
+    this.itemsNum = data.columns.x.length;
     this.currentItemsPositions = getItemsPositions();
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawAxis();
     this.drawGridLines();
-    this.drawDatesLegend(data);
-    showJoined && this.drawChart(data, "joined", joinedColor);
-    showLeft && this.drawChart(data, "left", leftColor);
+    this.drawDatesLegend(data.columns.x);
+    this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
 
-    this.drawAxis(data);
     this.hoverItem && this.drawHoverGrid();
   };
 
@@ -112,11 +115,17 @@ class MainChart {
     this.ctx.font = `${this.chart.height * chartFontSize}px -apple-system`;
     this.ctx.fillStyle = axisFontColor;
 
+    //  Calculate -nth number for drawing only up to 6 dates
+    const nthDate = data.length > 6 ? Math.round(data.length / 6) : 1;
+
     data.map((value, i) => {
-      const pos = this.chart.startX + (i * this.chart.width) / this.itemsNum;
-      const date = new Date(value.date);
-      const label = months[date.getMonth()] + " " + date.getDate();
-      this.ctx.fillText(label, pos, this.chart.startY + this.chart.height * 0.03);
+      //Draw only -nth dates
+      if (!(i % nthDate)) {
+        const pos = this.chart.startX + (i * this.chart.width) / this.itemsNum;
+        const date = new Date(value);
+        const label = months[date.getMonth()] + " " + date.getDate();
+        this.ctx.fillText(label, pos, this.chart.startY + this.chart.height * 0.03);
+      }
     });
   }
 
@@ -143,7 +152,7 @@ class MainChart {
     this.ctx.beginPath();
     this.ctx.moveTo(chart.startX, chart.startY);
     data.map((value, i) => {
-      const y = chart.height - ((value[type] / this.maxValueY) * chart.height + chart.endY);
+      const y = chart.height - ((value / this.maxValueY) * chart.height + chart.endY);
       const x = chart.startX + (i / itemsNum) * chart.width;
       i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
       hoverItem && hoverItem === i && this.drawHoverPoint(x, y, color);

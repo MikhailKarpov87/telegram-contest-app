@@ -1,6 +1,32 @@
-export function maxBy(data, field) {
-  const max = data.reduce((max, x, i, arr) => (x[field] > arr[max][field] ? i : max), 0);
-  return data[max];
+export function loadData(url) {
+  return fetch(url)
+    .then(function(response) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        return response.json();
+      }
+      throw new TypeError("Incorrect data received!");
+    })
+    .then(result => parseData(result))
+    .catch(function(error) {
+      console.log(error);
+    });
+}
+
+export function parseData(json) {
+  const data = json[0];
+  let result = { columns: {} };
+
+  for (let item of data.columns) {
+    const name = item[0];
+    item.shift();
+    result.columns[name] = item;
+  }
+  result.colors = data.colors;
+  result.names = data.names;
+  result.types = data.types;
+
+  return result;
 }
 
 export function getItemsPositions(startWidth, width, itemsNum) {
