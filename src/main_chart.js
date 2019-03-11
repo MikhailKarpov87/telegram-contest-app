@@ -5,7 +5,8 @@ import {
   chartFontSize,
   bgColorDay,
   bgColorNight,
-  hoverLineColor
+  hoverLineColor,
+  weekdays
 } from "./constants";
 
 import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
@@ -73,6 +74,7 @@ class MainChart {
     this.hoverItem && this.drawHoverGrid();
     this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
     this.hoverItem && this.drawHoverPoints();
+    this.hoverItem && this.showTooltip();
   };
 
   resize() {
@@ -196,6 +198,40 @@ class MainChart {
     ctx.lineTo(x, chart.endY);
 
     ctx.stroke();
+  }
+
+  showTooltip() {
+    const { ctx, chart, hoverItem } = this;
+    const x = chart.startX + (hoverItem / this.itemsNum) * chart.width;
+    const tooltip = document.getElementById("tooltip");
+    const tooltipDate = document.getElementsByClassName("tooltip-date")[0];
+    const tooltipInfo = document.getElementsByClassName("tooltip-info")[0];
+    const date = new Date(this.data.columns.x[hoverItem]);
+    const label = weekdays[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate();
+    tooltipDate.innerHTML = label;
+    tooltipInfo.innerHTML = "";
+
+    this.selectedLines.map(line => {
+      const number = this.data.columns[line][hoverItem];
+      const label = this.data.names[line];
+      const color = this.data.colors[line];
+      const infoDiv = document.createElement("div");
+      infoDiv.style = `
+      color: ${color};
+    `;
+      const numDiv = document.createElement("div");
+      numDiv.innerHTML = number;
+      const labelDiv = document.createElement("div");
+      labelDiv.innerHTML = label;
+      infoDiv.appendChild(numDiv);
+      infoDiv.appendChild(labelDiv);
+      tooltipInfo.appendChild(infoDiv);
+    });
+
+    //   <div>
+    //   <div class="num">145</div>
+    //   <div class="label">Joined</div>
+    // </div>
   }
 }
 
