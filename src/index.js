@@ -32,6 +32,6 @@ function initApp(data) {
     mainChart.update(data, selectedLines);
   }
 
-  window.addEventListener("load", () => mainChart.setup(data, selectedLines));
+  window.addEventListener("load", mainChart.setup);
   window.addEventListener("resize", mainChart.resize);
 }

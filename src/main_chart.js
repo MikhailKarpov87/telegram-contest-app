@@ -1,10 +1,7 @@
 import {
   axisFontColor,
   axisLinesColor,
-  joinedColor,
-  leftColor,
   months,
-  data,
   chartFontSize,
   bgColorDay,
   bgColorNight,
@@ -19,7 +16,7 @@ class MainChart {
     this.selectedLines = selectedLines;
   }
 
-  setup = ({ showJoined, showLeft }) => {
+  setup = () => {
     this.chart = {};
     this.dpi = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
@@ -34,7 +31,7 @@ class MainChart {
 
     this.resize();
     this.fix_dpi();
-    this.update();
+    this.update(this.data, this.selectedLines);
   };
 
   fix_dpi = () => {
@@ -58,22 +55,24 @@ class MainChart {
     this.ctx.scale(this.dpi, this.dpi);
   };
 
-  update = () => {
-    const data = this.data;
+  update = (newData, selectedLines) => {
+    //  Here probably should go some func to compare newData and this.data
+    this.data = newData;
+    const { data, chart } = this;
     this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
     if (this.maxNum === 0) return;
 
     this.maxValueY = getYAxisMaxValue(this.maxNum);
     this.itemsNum = data.columns.x.length;
-    this.currentItemsPositions = getItemsPositions();
+    this.currentItemsPositions = getItemsPositions(chart.startX, chart.width, this.itemsNum);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawAxis();
     this.drawGridLines();
     this.drawDatesLegend(data.columns.x);
-    this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
-
     this.hoverItem && this.drawHoverGrid();
+    this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
+    this.hoverItem && this.drawHoverPoints();
   };
 
   resize() {
@@ -98,7 +97,8 @@ class MainChart {
 
     if (yPos < chart.startY && yPos > chart.endY && xPos > chart.startX && xPos < chart.endX) {
       this.hoverItem = findClosestItem(xPos, this.currentItemsPositions);
-      requestAnimationFrame(this.update);
+
+      requestAnimationFrame(() => this.update(this.data, this.selectedLines));
     }
   };
 
@@ -152,10 +152,9 @@ class MainChart {
     this.ctx.beginPath();
     this.ctx.moveTo(chart.startX, chart.startY);
     data.map((value, i) => {
-      const y = chart.height - ((value / this.maxValueY) * chart.height + chart.endY);
-      const x = chart.startX + (i / itemsNum) * chart.width;
+      const y = Math.round(chart.height - ((value / this.maxValueY) * chart.height + chart.endY));
+      const x = Math.round(chart.startX + (i / itemsNum) * chart.width);
       i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
-      hoverItem && hoverItem === i && this.drawHoverPoint(x, y, color);
     });
 
     this.ctx.lineCap = "round";
@@ -164,20 +163,32 @@ class MainChart {
     this.ctx.stroke();
   }
 
-  drawHoverPoint(x, y, originalColor) {
-    ctx.closePath();
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-    ctx.closePath();
-    ctx.strokeStyle = bgColorDay;
-    ctx.beginPath();
-    ctx.arc(x, y, 2, 0, Math.PI * 2, false);
-    ctx.moveTo(x, y);
-    ctx.strokeStyle = originalColor;
+  drawHoverPoints() {
+    const { ctx, hoverItem, itemsNum, chart } = this;
+
+    this.selectedLines.map(line => {
+      const value = this.data.columns[line][hoverItem];
+      const y = Math.round(chart.height - ((value / this.maxValueY) * chart.height + chart.endY));
+      const x = Math.round(chart.startX + (hoverItem / itemsNum) * chart.width);
+
+      ctx.beginPath();
+      ctx.strokeStyle = this.data.colors[line];
+      ctx.lineWidth = 3;
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.lineWidth = 1;
+      ctx.fillStyle = bgColorDay;
+      ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+      ctx.fill();
+    });
   }
 
   drawHoverGrid() {
-    const x = chart.startX + (hoverItem / itemsNum) * chart.width;
+    const { ctx, chart } = this;
+    const x = chart.startX + (this.hoverItem / this.itemsNum) * chart.width;
     ctx.lineWidth = 1;
     ctx.strokeStyle = hoverLineColor;
     ctx.beginPath();
