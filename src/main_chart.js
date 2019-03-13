@@ -13,51 +13,52 @@ import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers"
 
 class MainChart {
   constructor(data, selectedLines) {
+    // this.canvas = {};
+    //  Ratio to set height relative to width
+    this.ratio = 0.55;
+    this.chart = {};
     this.data = data;
+    this.pixelRatio = window.devicePixelRatio || 1;
     this.selectedLines = selectedLines;
+    this.wrapper = document.getElementById("main_chart_container");
   }
 
   setup = () => {
-    this.chart = {};
-    this.dpi = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
     this.canvas.id = "main_chart";
     this.canvas.addEventListener("mousemove", this.onMouseMove);
-    document.getElementById("main_chart_container").appendChild(this.canvas);
-    this.canvas.style = `
-            width: 100%;
-            height: 100%;
-        `;
     this.ctx = this.canvas.getContext("2d");
+    document.getElementById("main_chart_container").appendChild(this.canvas);
 
     this.resize();
-    this.fix_dpi();
-    this.update(this.data, this.selectedLines);
   };
 
-  fix_dpi = () => {
-    const canvas = document.getElementById("main_chart");
-    const style = {
-      height() {
-        return +getComputedStyle(canvas)
-          .getPropertyValue("height")
-          .slice(0, -2);
-      },
-      width() {
-        return +getComputedStyle(canvas)
-          .getPropertyValue("width")
-          .slice(0, -2);
-      }
-    };
+  resize = () => {
+    const { innerWidth, innerHeight } = window;
 
-    this.canvas.setAttribute("width", style.width() * this.dpi);
-    this.canvas.setAttribute("height", style.height() * this.dpi);
+    const width =
+      innerHeight < innerWidth ? Math.round(1.0 * innerWidth) : Math.round(1.0 * innerHeight);
+    const height = Math.round(this.ratio * width);
 
-    this.ctx.scale(this.dpi, this.dpi);
+    this.wrapper.style.width = width + "px";
+    this.wrapper.style.height = height + "px";
+
+    this.canvas.width = width * this.pixelRatio;
+    this.canvas.height = height * this.pixelRatio;
+
+    this.chart.startX = Math.round(0.05 * this.canvas.width);
+    this.chart.endX = Math.round(0.95 * this.canvas.width);
+    this.chart.endY = Math.round(0 * this.canvas.height);
+    this.chart.startY = Math.round(0.9 * this.canvas.height);
+    this.chart.width = this.chart.endX - this.chart.startX;
+    this.chart.height = this.chart.startY - this.chart.endY;
+
+    this.update(this.data, this.selectedLines);
   };
 
   update = (newData, selectedLines) => {
     //  Here probably should go some func to compare newData and this.data
+    //  For animation, etc.
     this.data = newData;
     const { data, chart } = this;
     this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
@@ -77,26 +78,15 @@ class MainChart {
     this.hoverItem && this.showTooltip();
   };
 
-  resize() {
-    const { innerWidth, innerHeight } = window;
-
-    this.canvas.width = innerWidth;
-    this.canvas.height = innerHeight * this.dpi;
-    this.chart.startX = Math.round(0.05 * innerWidth);
-    this.chart.endX = Math.round(0.95 * innerWidth);
-    this.chart.endY = Math.round(0.05 * innerHeight);
-    this.chart.startY = Math.round(0.95 * innerHeight);
-    this.chart.width = innerWidth;
-    this.chart.height = innerHeight;
-  }
-
   onMouseMove = e => {
     const { x, y } = e;
     const { chart } = this;
     const rect = this.canvas.getBoundingClientRect();
-    const xPos = x - Math.round(rect.left);
-    const yPos = y - Math.round(rect.top);
-
+    const xPos = (x - Math.round(rect.left)) * this.pixelRatio;
+    const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
+    console.log("mouse: " + xPos + "|" + yPos);
+    console.log(chart);
+    console.log(this.currentItemsPositions);
     if (yPos < chart.startY && yPos > chart.endY && xPos > chart.startX && xPos < chart.endX) {
       this.hoverItem = findClosestItem(xPos, this.currentItemsPositions);
 
@@ -114,7 +104,9 @@ class MainChart {
   }
 
   drawDatesLegend(data) {
-    this.ctx.font = `${this.chart.height * chartFontSize}px -apple-system`;
+    console.log();
+    const fontSize = Math.round(chartFontSize * +this.pixelRatio);
+    this.ctx.font = `${fontSize}px -apple-system`;
     this.ctx.fillStyle = axisFontColor;
 
     //  Calculate -nth number for drawing only up to 6 dates
@@ -126,27 +118,28 @@ class MainChart {
         const pos = this.chart.startX + (i * this.chart.width) / this.itemsNum;
         const date = new Date(value);
         const label = months[date.getMonth()] + " " + date.getDate();
-        this.ctx.fillText(label, pos, this.chart.startY + this.chart.height * 0.03);
+        this.ctx.fillText(label, pos, this.chart.startY + this.chart.height * 0.06);
       }
     });
   }
 
   drawGridLines() {
-    this.ctx.font = `${this.chart.height * chartFontSize}px -apple-system`;
+    const fontSize = Math.round(chartFontSize * +this.pixelRatio);
+    this.ctx.font = `${fontSize}px -apple-system`;
     this.ctx.strokeStyle = axisLinesColor;
     this.ctx.fillStyle = axisFontColor;
 
     for (let i = 1; i <= 5; i++) {
       const height = this.chart.startY - (i * this.chart.height) / 5;
       const currentValue = (this.maxValueY * i) / 5;
-      this.ctx.fillText(currentValue, this.chart.startX, height - this.chart.height * 0.02);
+      this.ctx.fillText(currentValue, this.chart.startX, height - 0.5 * fontSize);
       this.ctx.beginPath();
       this.ctx.moveTo(this.chart.startX, height);
       this.ctx.lineTo(this.chart.endX, height);
       this.ctx.stroke();
     }
 
-    this.ctx.fillText(0, this.chart.startX, this.chart.startY - this.chart.height * 0.02);
+    this.ctx.fillText(0, this.chart.startX, this.chart.startY - 0.5 * fontSize);
   }
 
   drawChart(data, type, color) {

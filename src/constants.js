@@ -1,7 +1,7 @@
 export const axisFontColor = "#96A2AA";
 export const axisLinesColor = "#ECF0F3";
 export const hoverLineColor = "#DFE6EB";
-export const chartFontSize = 0.03;
+export const chartFontSize = 14;
 export const bgColorDay = "#FFFFFF";
 export const bgColorNight = "#242F3E";
 

@@ -19,6 +19,8 @@ class NavChart {
 
   setup = () => {
     this.chart = {};
+    this.canvas = {};
+    this.ratio = 0.5;
     this.dpi = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
     this.canvas.id = "nav_chart";
@@ -39,9 +41,11 @@ class NavChart {
     const canvas = document.getElementById("main_chart");
     const style = {
       height() {
-        return +getComputedStyle(canvas)
-          .getPropertyValue("height")
-          .slice(0, -2);
+        return (
+          +getComputedStyle(canvas)
+            .getPropertyValue("width")
+            .slice(0, -2) * this.ratio
+        );
       },
       width() {
         return +getComputedStyle(canvas)
@@ -76,13 +80,13 @@ class NavChart {
     const { innerWidth, innerHeight } = window;
 
     this.canvas.width = innerWidth;
-    this.canvas.height = innerHeight * this.dpi;
-    this.chart.startX = Math.round(0.05 * innerWidth);
-    this.chart.endX = Math.round(0.95 * innerWidth);
-    this.chart.endY = Math.round(0.05 * innerHeight);
-    this.chart.startY = Math.round(0.95 * innerHeight);
+    this.canvas.height = innerHeight * this.dpi * this.ratio;
+    this.chart.startX = Math.round(0.05 * this.canvas.width);
+    this.chart.endX = Math.round(0.95 * this.canvas.width);
+    this.chart.endY = Math.round(0.05 * this.canvas.height);
+    this.chart.startY = Math.round(0.95 * this.canvas.height);
     this.chart.width = innerWidth;
-    this.chart.height = innerHeight;
+    this.chart.height = innerWidth * this.ratio;
   }
 
   onMouseMove = e => {

@@ -5,7 +5,7 @@ import { loadData } from "./helpers";
 loadData("http://localhost:3000/chart_data.json").then(data => initApp(data));
 
 function initApp(data) {
-  console.log(data);
+  // console.log(data);
 
   let selectedLines = [];
   const lines = data.names;
@@ -28,7 +28,7 @@ function initApp(data) {
 
   function setup() {
     mainChart.setup();
-    navChart.setup();
+    // navChart.setup();
   }
 
   function onCheckboxChange(e) {
