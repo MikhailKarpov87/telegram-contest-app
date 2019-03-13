@@ -1,4 +1,5 @@
 import MainChart from "./main_chart";
+import NavChart from "./nav_chart";
 import { loadData } from "./helpers";
 
 loadData("http://localhost:3000/chart_data.json").then(data => initApp(data));
@@ -23,6 +24,13 @@ function initApp(data) {
 
   const mainChart = new MainChart(data, selectedLines);
 
+  const navChart = new NavChart(data, selectedLines);
+
+  function setup() {
+    mainChart.setup();
+    navChart.setup();
+  }
+
   function onCheckboxChange(e) {
     const { checked, name } = e.target;
     checked && !selectedLines.includes(name) && selectedLines.push(name);
@@ -32,6 +40,6 @@ function initApp(data) {
     mainChart.update(data, selectedLines);
   }
 
-  window.addEventListener("load", mainChart.setup);
+  window.addEventListener("load", setup);
   window.addEventListener("resize", mainChart.resize);
 }

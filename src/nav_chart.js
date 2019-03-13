@@ -11,7 +11,7 @@ import {
 
 import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
 
-class MainChart {
+class NavChart {
   constructor(data, selectedLines) {
     this.data = data;
     this.selectedLines = selectedLines;
@@ -21,9 +21,9 @@ class MainChart {
     this.chart = {};
     this.dpi = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
-    this.canvas.id = "main_chart";
+    this.canvas.id = "nav_chart";
     this.canvas.addEventListener("mousemove", this.onMouseMove);
-    document.getElementById("main_chart_container").appendChild(this.canvas);
+    document.getElementById("nav_chart_container").appendChild(this.canvas);
     this.canvas.style = `
             width: 100%;
             height: 100%;
@@ -68,13 +68,8 @@ class MainChart {
     this.currentItemsPositions = getItemsPositions(chart.startX, chart.width, this.itemsNum);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawAxis();
-    this.drawGridLines();
-    this.drawDatesLegend(data.columns.x);
-    this.hoverItem && this.drawHoverGrid();
+
     this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
-    this.hoverItem && this.drawHoverPoints();
-    this.hoverItem && this.showTooltip();
   };
 
   resize() {
@@ -235,4 +230,4 @@ class MainChart {
   }
 }
 
-export default MainChart;
+export default NavChart;
