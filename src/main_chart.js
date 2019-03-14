@@ -8,53 +8,14 @@ import {
   hoverLineColor,
   weekdays
 } from "./constants";
+import Chart from "./chart";
 
 import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
 
-class MainChart {
-  constructor(data, selectedLines) {
-    // this.canvas = {};
-    //  Ratio to set height relative to width
-    this.ratio = 0.55;
-    this.chart = {};
-    this.data = data;
-    this.pixelRatio = window.devicePixelRatio || 1;
-    this.selectedLines = selectedLines;
-    this.wrapper = document.getElementById("main_chart_container");
+class MainChart extends Chart {
+  constructor(options) {
+    super(options);
   }
-
-  setup = () => {
-    this.canvas = document.createElement("canvas");
-    this.canvas.id = "main_chart";
-    this.canvas.addEventListener("mousemove", this.onMouseMove);
-    this.ctx = this.canvas.getContext("2d");
-    document.getElementById("main_chart_container").appendChild(this.canvas);
-
-    this.resize();
-  };
-
-  resize = () => {
-    const { innerWidth, innerHeight } = window;
-
-    const width =
-      innerHeight < innerWidth ? Math.round(1.0 * innerWidth) : Math.round(1.0 * innerHeight);
-    const height = Math.round(this.ratio * width);
-
-    this.wrapper.style.width = width + "px";
-    this.wrapper.style.height = height + "px";
-
-    this.canvas.width = width * this.pixelRatio;
-    this.canvas.height = height * this.pixelRatio;
-
-    this.chart.startX = Math.round(0.05 * this.canvas.width);
-    this.chart.endX = Math.round(0.95 * this.canvas.width);
-    this.chart.endY = Math.round(0 * this.canvas.height);
-    this.chart.startY = Math.round(0.9 * this.canvas.height);
-    this.chart.width = this.chart.endX - this.chart.startX;
-    this.chart.height = this.chart.startY - this.chart.endY;
-
-    this.update(this.data, this.selectedLines);
-  };
 
   update = (newData, selectedLines) => {
     //  Here probably should go some func to compare newData and this.data
@@ -84,9 +45,9 @@ class MainChart {
     const rect = this.canvas.getBoundingClientRect();
     const xPos = (x - Math.round(rect.left)) * this.pixelRatio;
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
-    console.log("mouse: " + xPos + "|" + yPos);
-    console.log(chart);
-    console.log(this.currentItemsPositions);
+    // console.log("mouse: " + xPos + "|" + yPos);
+    // console.log(chart);
+    // console.log(this.currentItemsPositions);
     if (yPos < chart.startY && yPos > chart.endY && xPos > chart.startX && xPos < chart.endX) {
       this.hoverItem = findClosestItem(xPos, this.currentItemsPositions);
 
@@ -106,7 +67,7 @@ class MainChart {
   drawDatesLegend(data) {
     console.log();
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
-    this.ctx.font = `${fontSize}px -apple-system`;
+    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.fillStyle = axisFontColor;
 
     //  Calculate -nth number for drawing only up to 6 dates
@@ -125,7 +86,7 @@ class MainChart {
 
   drawGridLines() {
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
-    this.ctx.font = `${fontSize}px -apple-system`;
+    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.strokeStyle = axisLinesColor;
     this.ctx.fillStyle = axisFontColor;
 
@@ -142,41 +103,27 @@ class MainChart {
     this.ctx.fillText(0, this.chart.startX, this.chart.startY - 0.5 * fontSize);
   }
 
-  drawChart(data, type, color) {
-    const { chart, itemsNum, hoverItem } = this;
-    this.ctx.beginPath();
-    this.ctx.moveTo(chart.startX, chart.startY);
-    data.map((value, i) => {
-      const y = Math.round(chart.height - ((value / this.maxValueY) * chart.height + chart.endY));
-      const x = Math.round(chart.startX + (i / itemsNum) * chart.width);
-      i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
-    });
-
-    this.ctx.lineCap = "round";
-    this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = 3;
-    this.ctx.stroke();
-  }
-
   drawHoverPoints() {
     const { ctx, hoverItem, itemsNum, chart } = this;
 
     this.selectedLines.map(line => {
       const value = this.data.columns[line][hoverItem];
-      const y = Math.round(chart.height - ((value / this.maxValueY) * chart.height + chart.endY));
+      const y = Math.round(
+        chart.height - ((value / this.maxValueY) * chart.height * 0.85 + chart.endY)
+      );
       const x = Math.round(chart.startX + (hoverItem / itemsNum) * chart.width);
 
       ctx.beginPath();
       ctx.strokeStyle = this.data.colors[line];
       ctx.lineWidth = 3;
       ctx.moveTo(x, y);
-      ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+      ctx.arc(x, y, 6, 0, Math.PI * 2, false);
       ctx.stroke();
 
       ctx.beginPath();
       ctx.lineWidth = 1;
       ctx.fillStyle = bgColorDay;
-      ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+      ctx.arc(x, y, 4, 0, Math.PI * 2, false);
       ctx.fill();
     });
   }
@@ -213,18 +160,15 @@ class MainChart {
       color: ${color};
     `;
       const numDiv = document.createElement("div");
+      numDiv.className = "num";
       numDiv.innerHTML = number;
       const labelDiv = document.createElement("div");
+      labelDiv.className = "label";
       labelDiv.innerHTML = label;
       infoDiv.appendChild(numDiv);
       infoDiv.appendChild(labelDiv);
       tooltipInfo.appendChild(infoDiv);
     });
-
-    //   <div>
-    //   <div class="num">145</div>
-    //   <div class="label">Joined</div>
-    // </div>
   }
 }
 
