@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import Chart from "./chart";
 
-import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
+import { findClosestItem, getYAxisMaxValue } from "./helpers";
 
 class MainChart extends Chart {
   constructor(options) {
@@ -22,32 +22,6 @@ class MainChart extends Chart {
 
   onNavChange = (start, end) => {
     this.hoverItem = null;
-    const getData = (start, end) => {
-      const data = this.data;
-      if (start > 0 || end < 1) {
-        if (start > 0.9) start = 0.9;
-        if (end < 0.1) end = 0.1;
-        const itemsNum = data.columns.x.length;
-        const spaceBetween = 1 / itemsNum;
-        const firstItemId = Math.floor(start / spaceBetween);
-        const itemPosition = (1 / itemsNum) * firstItemId;
-        this.deltaFirstX = 1 - (start - itemPosition) / spaceBetween;
-
-        let newColumns = {};
-        for (let column in data.columns) {
-          if (column === "x") newColumns[column] = data.columns[column];
-          newColumns[column] = data.columns[column].slice(firstItemId);
-          const deltaY = newColumns[column][1] - newColumns[column][0];
-          newColumns[column][0] = newColumns[column][1] - this.deltaFirstX * deltaY;
-        }
-        return { ...data, columns: newColumns };
-      } else {
-        return this;
-      }
-    };
-
-    const data = getData(start, end);
-
     requestAnimationFrame(() => this.update(this.data, start, end));
   };
 
@@ -90,8 +64,6 @@ class MainChart extends Chart {
     const rect = this.canvas.getBoundingClientRect();
     const xPos = (x - Math.round(rect.left)) * this.pixelRatio;
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
-    // console.log("mouse: " + xPos + "|" + yPos);
-    // console.log(chart);
 
     if (
       this.selectedLines.length &&

@@ -29,19 +29,6 @@ export function parseData(json) {
   return result;
 }
 
-export function getItemsPositions(startWidth, width, itemsNum) {
-  let positions = [];
-  positions[0] = startWidth;
-
-  const spaceBetween = Math.round((width - startWidth) / (itemsNum - 1));
-
-  for (let i = 1; i < itemsNum; i++) {
-    positions[i] = positions[i - 1] + spaceBetween;
-  }
-
-  return positions;
-}
-
 export function findClosestItem(x, coords) {
   return coords
     .map(value => Math.abs(value.x - x))

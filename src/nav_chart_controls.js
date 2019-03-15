@@ -8,7 +8,7 @@ class NavChartControls extends Chart {
 
   update = () => {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawNavOverlay();
+    requestAnimationFrame(() => this.drawNavOverlay());
   };
 
   drawNavOverlay(start, end) {
@@ -29,13 +29,9 @@ class NavChartControls extends Chart {
     const xPos = (x - Math.round(rect.left)) * this.pixelRatio;
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
     if (yPos < chart.startY && yPos > chart.endY && xPos > chart.startX && xPos < chart.endX) {
-      // console.log(xPos - 1);
-      // console.log(chart.startX + "|" + chart.width - chart.startX);
-      const startPos = (xPos - 1) / chart.endX;
-      // console.log(startPos);
-      // newData, selectedLines, start, end
-
+      const startPos = (xPos - 1 - chart.startX) / (chart.width + 2);
       requestAnimationFrame(() => this.controlledChart.onNavChange(startPos, 1));
+      // console.log(startPos);
     }
   };
 }

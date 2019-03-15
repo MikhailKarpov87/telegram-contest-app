@@ -1,6 +1,3 @@
-import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
-import { throws } from "assert";
-
 class Chart {
   constructor(options) {
     this.chart = {};
@@ -52,23 +49,41 @@ class Chart {
     this.chart.startY = Math.round(0.85 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-    console.log(this.name + " :");
-    console.log(this.chart);
-    console.log(this.canvas);
     this.update(this.data, this.selectedLines, this.start, this.end);
   };
 
   calcCoordinates(data, start, end) {
     const { chart, itemsNum } = this;
     let result = [];
-    const spaceBetween = chart.width / (itemsNum - 1);
+    const firstItemId = Math.floor(start * data.length);
+    const slicedData = data.slice(firstItemId);
+    const initialItemFraction = 1 / data.length;
+    const startFraction = 1 - (start - initialItemFraction * firstItemId) / initialItemFraction;
+    const spaceBetween = chart.width / (slicedData.length - 1 + startFraction);
+    let x0, y0;
 
-    data.map((value, i) => {
+    if (start > 0) {
+      if (start > 0.9) start = 0.9;
+      const first = slicedData[0];
+      const second = slicedData[1];
+      const startValue = first + (second - first) * (1 - startFraction);
+
+      y0 = chart.startY - (startValue / this.maxValueY) * chart.height;
+      x0 = chart.startX;
+    }
+
+    // debugger;
+
+    slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
-      const x = Math.round(chart.startX + i * spaceBetween);
+      const x = Math.round(chart.startX + (i - 1 + startFraction) * spaceBetween);
       result.push({ x, y });
+
       // console.log(`x[${i}]: ${x}, y[${i}]: ${y}, value[${i}]: ${value}`);
     });
+
+    result[0] = { x: x0, y: y0 };
+
     return result;
   }
 
@@ -88,6 +103,8 @@ class Chart {
     this.ctx.lineWidth = this.lineWidth;
     this.ctx.stroke();
   }
+
+  onMouseMove = () => {};
 }
 
 export default Chart;
