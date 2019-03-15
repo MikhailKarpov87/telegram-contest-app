@@ -23,10 +23,15 @@ class Chart {
     this.canvas = document.createElement("canvas");
     this.canvas.id = this.name;
     this.canvas.addEventListener("mousemove", this.onMouseMove);
+
+    if ((this.name = "nav_chat_controls")) {
+      this.canvas.addEventListener("mousedown", this.onMouseDown);
+      this.canvas.addEventListener("mouseup", this.onMouseUp);
+    }
+
     this.ctx = this.canvas.getContext("2d");
     this.ctx.translate(0.5, 0.5);
     this.container.appendChild(this.canvas);
-
     this.resize();
   };
 
@@ -76,7 +81,7 @@ class Chart {
 
     // Calculating data for last line
     const lastItemId = Math.ceil(end * data.length);
-    slicedData = data.slice(0, lastItemId);
+    slicedData = slicedData.slice(0, lastItemId);
     const endFraction = 1 - (initialItemFraction * lastItemId - end) / initialItemFraction;
 
     const arraySize = slicedData.length - 1;
@@ -85,8 +90,6 @@ class Chart {
       (slicedData[arraySize - 1] - slicedData[arraySize]) * (1 - endFraction);
 
     const spaceBetween = chart.width / (slicedData.length - 3 + startFraction + endFraction);
-
-    // console.log(slicedData);
 
     y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
     x0 = Math.round(chart.startX);
@@ -124,6 +127,8 @@ class Chart {
   }
 
   onMouseMove = () => {};
+  onMouseDown = () => {};
+  onMouseUp = () => {};
 }
 
 export default Chart;
