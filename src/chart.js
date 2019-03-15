@@ -53,36 +53,37 @@ class Chart {
   };
 
   calcCoordinates(data, start, end) {
-    const { chart, itemsNum } = this;
-    let result = [];
+    const { chart } = this;
+    let x0,
+      y0,
+      result = [];
+
+    if (start > 0.9) start = 0.9;
+    if (end < 0.1) end = 0.1;
+
+    //  Calculating data for first line
     const firstItemId = Math.floor(start * data.length);
     const slicedData = data.slice(firstItemId);
     const initialItemFraction = 1 / data.length;
     const startFraction = 1 - (start - initialItemFraction * firstItemId) / initialItemFraction;
-    const spaceBetween = chart.width / (slicedData.length - 1 + startFraction);
-    let x0, y0;
+    const spaceBetween = chart.width / (slicedData.length - 2 + startFraction);
+    const firstValue = slicedData[0];
+    const secondValue = slicedData[1];
+    const startValue = firstValue + (secondValue - firstValue) * (1 - startFraction);
 
-    if (start > 0) {
-      if (start > 0.9) start = 0.9;
-      const first = slicedData[0];
-      const second = slicedData[1];
-      const startValue = first + (second - first) * (1 - startFraction);
+    // Calculating data for last line
 
-      y0 = chart.startY - (startValue / this.maxValueY) * chart.height;
-      x0 = chart.startX;
-    }
-
-    // debugger;
+    y0 = chart.startY - (startValue / this.maxValueY) * chart.height;
+    x0 = chart.startX;
 
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
       const x = Math.round(chart.startX + (i - 1 + startFraction) * spaceBetween);
       result.push({ x, y });
-
-      // console.log(`x[${i}]: ${x}, y[${i}]: ${y}, value[${i}]: ${value}`);
     });
 
-    result[0] = { x: x0, y: y0 };
+    if (start > 0) result[0] = { x: x0, y: y0 };
+    // end < 1 &&
 
     return result;
   }
