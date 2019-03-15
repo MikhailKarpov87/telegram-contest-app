@@ -49,13 +49,16 @@ class Chart {
     this.chart.startY = Math.round(0.85 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-    this.update(this.data, this.selectedLines, this.start, this.end);
+    this.update(this.data, this.start, this.end);
   };
 
   calcCoordinates(data, start, end) {
     const { chart } = this;
     let x0,
       y0,
+      xLast,
+      yLast,
+      slicedData,
       result = [];
 
     if (start > 0.9) start = 0.9;
@@ -63,18 +66,33 @@ class Chart {
 
     //  Calculating data for first line
     const firstItemId = Math.floor(start * data.length);
-    const slicedData = data.slice(firstItemId);
+    slicedData = data.slice(firstItemId);
     const initialItemFraction = 1 / data.length;
     const startFraction = 1 - (start - initialItemFraction * firstItemId) / initialItemFraction;
-    const spaceBetween = chart.width / (slicedData.length - 2 + startFraction);
+
     const firstValue = slicedData[0];
     const secondValue = slicedData[1];
     const startValue = firstValue + (secondValue - firstValue) * (1 - startFraction);
 
     // Calculating data for last line
+    const lastItemId = Math.ceil(end * data.length);
+    slicedData = data.slice(0, lastItemId);
+    const endFraction = 1 - (initialItemFraction * lastItemId - end) / initialItemFraction;
 
-    y0 = chart.startY - (startValue / this.maxValueY) * chart.height;
-    x0 = chart.startX;
+    const arraySize = slicedData.length - 1;
+    const endValue =
+      slicedData[arraySize] +
+      (slicedData[arraySize - 1] - slicedData[arraySize]) * (1 - endFraction);
+
+    const spaceBetween = chart.width / (slicedData.length - 3 + startFraction + endFraction);
+
+    // console.log(slicedData);
+
+    y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
+    x0 = Math.round(chart.startX);
+
+    yLast = Math.round(chart.startY - (endValue / this.maxValueY) * chart.height);
+    xLast = Math.round(chart.endX);
 
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
@@ -83,7 +101,7 @@ class Chart {
     });
 
     if (start > 0) result[0] = { x: x0, y: y0 };
-    // end < 1 &&
+    if (end < 1) result[arraySize] = { x: xLast, y: yLast };
 
     return result;
   }

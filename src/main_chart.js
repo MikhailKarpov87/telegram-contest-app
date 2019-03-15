@@ -73,7 +73,7 @@ class MainChart extends Chart {
       xPos < chart.endX
     ) {
       this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
-      requestAnimationFrame(() => this.update(this.data, this.selectedLines, this.start, this.end));
+      requestAnimationFrame(() => this.update(this.data, this.start, this.end));
     }
   };
 

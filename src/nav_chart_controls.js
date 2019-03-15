@@ -30,7 +30,7 @@ class NavChartControls extends Chart {
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
     if (yPos < chart.startY && yPos > chart.endY && xPos > chart.startX && xPos < chart.endX) {
       const startPos = (xPos - 1 - chart.startX) / (chart.width + 2);
-      requestAnimationFrame(() => this.controlledChart.onNavChange(startPos, 1));
+      requestAnimationFrame(() => this.controlledChart.onNavChange(0, startPos));
       // console.log(startPos);
     }
   };

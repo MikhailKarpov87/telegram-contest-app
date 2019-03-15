@@ -68,7 +68,7 @@ function initApp(data) {
     !checked &&
       selectedLines.includes(name) &&
       selectedLines.splice(selectedLines.indexOf(name), 1);
-    mainChart.update(data, selectedLines);
+    mainChart.update(data, selectedLines, 0, 1);
     navChart.update(data, selectedLines);
   }
 
