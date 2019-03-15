@@ -1,17 +1,25 @@
 import { findClosestItem, getItemsPositions, getYAxisMaxValue } from "./helpers";
+import { throws } from "assert";
 
 class Chart {
   constructor(options) {
     this.chart = {};
+    this.coords = {};
     this.ratio = options.ratio;
     this.data = options.data;
     this.name = options.name;
     this.lineWidth = 4;
+    this.start = 0;
+    this.end = 1;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.selectedLines = options.selectedLines;
-    this.container = document.createElement("div");
-    this.container.id = `${this.name}_container`;
-    document.getElementById("app").appendChild(this.container);
+    if (document.getElementById(options.container)) {
+      this.container = document.getElementById(options.container);
+    } else {
+      this.container = document.createElement("div");
+      this.container.id = options.container;
+      document.getElementById("app").appendChild(this.container);
+    }
   }
 
   setup = () => {
@@ -44,43 +52,36 @@ class Chart {
     this.chart.startY = Math.round(0.85 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-
-    this.update(this.data, this.selectedLines);
+    console.log(this.name + " :");
+    console.log(this.chart);
+    console.log(this.canvas);
+    this.update(this.data, this.selectedLines, this.start, this.end);
   };
 
-  update = (newData, selectedLines) => {
-    //  Here2 probably should go some func to compare newData and this.data
-    //  For animation, etc.
-    this.data = newData;
-    const { data, chart } = this;
-    this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
-    if (this.maxNum === 0) return;
+  calcCoordinates(data, start, end) {
+    const { chart, itemsNum } = this;
+    let result = [];
+    const spaceBetween = chart.width / (itemsNum - 1);
 
-    this.maxValueY = getYAxisMaxValue(this.maxNum);
-    this.itemsNum = data.columns.x.length;
-    this.currentItemsPositions = getItemsPositions(chart.startX, chart.width, this.itemsNum);
-
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawAxis();
-    this.drawGridLines();
-    this.drawDatesLegend(data.columns.x);
-    this.hoverItem && this.drawHoverGrid();
-    this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
-    this.hoverItem && this.drawHoverPoints();
-    this.hoverItem && this.showTooltip();
-  };
+    data.map((value, i) => {
+      const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
+      const x = Math.round(chart.startX + i * spaceBetween);
+      result.push({ x, y });
+      // console.log(`x[${i}]: ${x}, y[${i}]: ${y}, value[${i}]: ${value}`);
+    });
+    return result;
+  }
 
   drawChart(data, type, color) {
-    const { chart, itemsNum } = this;
+    const { chart } = this;
+
     this.ctx.beginPath();
     this.ctx.moveTo(chart.startX, chart.startY);
+
     data.map((value, i) => {
-      const y = Math.round(
-        chart.height - ((value / this.maxValueY) * chart.height * 0.85 + chart.endY)
-      );
-      const x = Math.round(chart.startX + (i / itemsNum) * chart.width);
+      const { x, y } = value;
       i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
-    });
+    }, 0);
 
     this.ctx.lineCap = "round";
     this.ctx.strokeStyle = color;

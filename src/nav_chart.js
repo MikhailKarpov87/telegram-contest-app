@@ -20,7 +20,10 @@ class NavChart extends Chart {
     this.itemsNum = data.columns.x.length;
     this.currentItemsPositions = getItemsPositions(chart.startX, chart.width, this.itemsNum);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.selectedLines.map(line => this.drawChart(data.columns[line], line, data.colors[line]));
+    this.selectedLines.map(line => {
+      this.coords = this.calcCoordinates(data.columns[line], this.start, this.end);
+      this.drawChart(this.coords, line, data.colors[line]);
+    });
   };
 }
 

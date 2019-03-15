@@ -24,15 +24,35 @@ function initApp(data) {
     checkbox.addEventListener("change", onCheckboxChange);
   }
 
-  const mainChart = new MainChart({ name: "main_chart", data, selectedLines, ratio: 0.5 });
+  const mainChart = new MainChart({
+    name: "main_chart",
+    container: "main_chart_container",
+    data,
+    selectedLines,
+    ratio: 0.35
+  });
 
-  const navChart = new NavChart({ name: "nav_chart", data, selectedLines, ratio: 0.15 });
+  const navChart = new NavChart({
+    name: "nav_chart",
+    container: "nav_chart_container",
+    data,
+    selectedLines,
+    ratio: 0.15
+  });
 
-  const navChartControls = new NavChartControls({ ratio: 0.15 });
+  const navChartControls = new NavChartControls({
+    name: "nav_chart_controls",
+    container: "nav_chart_container",
+    data: [],
+    selectedLines,
+    ratio: 0.15,
+    controlledChart: mainChart
+  });
 
   function setup() {
     mainChart.setup();
     navChart.setup();
+    navChartControls.setup();
   }
 
   function onResize() {

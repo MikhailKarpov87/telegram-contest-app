@@ -33,7 +33,7 @@ export function getItemsPositions(startWidth, width, itemsNum) {
   let positions = [];
   positions[0] = startWidth;
 
-  const spaceBetween = Math.round((width - startWidth) / itemsNum);
+  const spaceBetween = Math.round((width - startWidth) / (itemsNum - 1));
 
   for (let i = 1; i < itemsNum; i++) {
     positions[i] = positions[i - 1] + spaceBetween;
@@ -42,9 +42,9 @@ export function getItemsPositions(startWidth, width, itemsNum) {
   return positions;
 }
 
-export function findClosestItem(x, currentItemsPositions) {
-  return currentItemsPositions
-    .map(value => Math.abs(value - x))
+export function findClosestItem(x, coords) {
+  return coords
+    .map(value => Math.abs(value.x - x))
     .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
 }
 
