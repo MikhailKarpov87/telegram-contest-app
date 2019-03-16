@@ -62,7 +62,6 @@ function initApp(data) {
   }
 
   function onCheckboxChange(e) {
-    console.log("2");
     const { checked, name } = e.target;
     checked && !selectedLines.includes(name) && selectedLines.push(name);
     !checked &&
