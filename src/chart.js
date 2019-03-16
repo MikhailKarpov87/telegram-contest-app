@@ -62,6 +62,9 @@ class Chart {
     const { chart } = this;
     let result = [];
 
+    const startX = start > 0.01 ? 0 : chart.startX;
+    const endX = end > 0.99 ? chart.endX : this.canvas.width;
+
     //  Calculating data for first line
     const firstItemId = Math.floor(start * data.length);
     const initialItemFraction = 1 / data.length;
@@ -83,17 +86,17 @@ class Chart {
       slicedData[arraySize] +
       (slicedData[arraySize - 1] - slicedData[arraySize]) * (1 - endFraction);
 
-    const spaceBetween = chart.width / (slicedData.length - 3 + startFraction + endFraction);
+    const spaceBetween = (endX - startX) / (slicedData.length - 3 + startFraction + endFraction);
 
     const y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
-    const x0 = Math.round(chart.startX);
+    const x0 = Math.round(startX);
 
     const yLast = Math.round(chart.startY - (endValue / this.maxValueY) * chart.height);
-    const xLast = Math.round(chart.endX);
+    const xLast = Math.round(endX);
 
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
-      const x = Math.round(chart.startX + (i - 1 + startFraction) * spaceBetween);
+      const x = Math.round(startX + (i - 1 + startFraction) * spaceBetween);
       result.push({ x, y });
     });
 

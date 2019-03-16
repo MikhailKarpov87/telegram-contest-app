@@ -28,6 +28,7 @@
     "webpack-dev-server": "^3.2.1"
   },
   "dependencies": {
-    "dotenv-webpack": "^1.7.0"
+    "dotenv-webpack": "^1.7.0",
+    "whatwg-fetch": "^3.0.0"
   }
 }

@@ -1,3 +1,5 @@
+import "whatwg-fetch";
+
 export function loadData(url) {
   return fetch(url)
     .then(function(response) {
