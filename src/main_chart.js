@@ -30,9 +30,6 @@ class MainChart extends Chart {
     this.end = end;
     //  Here probably should go some func to compare newData and this.data
     //  For animation, etc.
-    // this.data = data;
-
-    const { chart } = this;
 
     this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
     if (this.maxNum === 0) return;
@@ -58,7 +55,7 @@ class MainChart extends Chart {
     });
   };
 
-  onMouseMove = e => {
+  onMove = e => {
     const { x, y } = e;
     const { chart } = this;
     const rect = this.canvas.getBoundingClientRect();
@@ -73,6 +70,7 @@ class MainChart extends Chart {
       xPos < chart.endX
     ) {
       this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
+
       requestAnimationFrame(() => this.update(this.data, this.start, this.end));
     }
   };

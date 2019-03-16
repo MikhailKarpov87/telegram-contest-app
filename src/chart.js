@@ -22,11 +22,12 @@ class Chart {
   setup = () => {
     this.canvas = document.createElement("canvas");
     this.canvas.id = this.name;
-    this.canvas.addEventListener("mousemove", this.onMouseMove);
+    this.canvas.addEventListener("mousemove", this.onMove);
 
     if ((this.name = "nav_chat_controls")) {
-      this.canvas.addEventListener("mousedown", this.onMouseDown);
-      this.canvas.addEventListener("mouseup", this.onMouseUp);
+      this.canvas.addEventListener("mousedown", this.onDown);
+      this.canvas.addEventListener("mouseup", this.onUp);
+      this.canvas.addEventListener("mouseleave", this.onLeave);
     }
 
     this.ctx = this.canvas.getContext("2d");
@@ -59,31 +60,24 @@ class Chart {
 
   calcCoordinates(data, start, end) {
     const { chart } = this;
-    let x0,
-      y0,
-      xLast,
-      yLast,
-      slicedData,
-      result = [];
-
-    if (start > 0.9) start = 0.9;
-    if (end < 0.1) end = 0.1;
+    let result = [];
 
     //  Calculating data for first line
     const firstItemId = Math.floor(start * data.length);
-    slicedData = data.slice(firstItemId);
     const initialItemFraction = 1 / data.length;
     const startFraction = 1 - (start - initialItemFraction * firstItemId) / initialItemFraction;
-
-    const firstValue = slicedData[0];
-    const secondValue = slicedData[1];
+    const firstValue = data[firstItemId];
+    const secondValue = data[firstItemId + 1];
     const startValue = firstValue + (secondValue - firstValue) * (1 - startFraction);
 
     // Calculating data for last line
     const lastItemId = Math.ceil(end * data.length);
-    slicedData = slicedData.slice(0, lastItemId);
     const endFraction = 1 - (initialItemFraction * lastItemId - end) / initialItemFraction;
 
+    //  Slicing array
+    const slicedData = data.slice(firstItemId, lastItemId);
+
+    // Calculating value for last item
     const arraySize = slicedData.length - 1;
     const endValue =
       slicedData[arraySize] +
@@ -91,11 +85,11 @@ class Chart {
 
     const spaceBetween = chart.width / (slicedData.length - 3 + startFraction + endFraction);
 
-    y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
-    x0 = Math.round(chart.startX);
+    const y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
+    const x0 = Math.round(chart.startX);
 
-    yLast = Math.round(chart.startY - (endValue / this.maxValueY) * chart.height);
-    xLast = Math.round(chart.endX);
+    const yLast = Math.round(chart.startY - (endValue / this.maxValueY) * chart.height);
+    const xLast = Math.round(chart.endX);
 
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
@@ -103,8 +97,8 @@ class Chart {
       result.push({ x, y });
     });
 
-    if (start > 0) result[0] = { x: x0, y: y0 };
-    if (end < 1) result[arraySize] = { x: xLast, y: yLast };
+    result[0] = { x: x0, y: y0 };
+    result[arraySize] = { x: xLast, y: yLast };
 
     return result;
   }
@@ -126,9 +120,9 @@ class Chart {
     this.ctx.stroke();
   }
 
-  onMouseMove = () => {};
-  onMouseDown = () => {};
-  onMouseUp = () => {};
+  onMove = () => {};
+  onDown = () => {};
+  onUp = () => {};
 }
 
 export default Chart;
