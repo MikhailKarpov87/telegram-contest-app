@@ -43,13 +43,8 @@ class MainChart extends Chart {
 
   getMaxValue(data, start, end) {
     return Math.max(
-      ...this.selectedLines.map(line => Math.max(...data.columns[line].slice(start, end)))
+      ...this.selectedCharts.map(line => Math.max(...data.columns[line].slice(start, end)))
     );
-  }
-
-  updateSelectedLines(selectedLines) {
-    this.selectedLines = selectedLines;
-    this.update(this.start, this.end);
   }
 
   update = (start, end) => {
@@ -97,7 +92,7 @@ class MainChart extends Chart {
 
     this.hoverItem && this.drawHoverGrid();
 
-    this.selectedLines.map(line => {
+    this.selectedCharts.map(line => {
       this.coords[line] = this.calcChartData(this.data.columns[line], start, end);
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
       this.drawChart(this.coords[line], line, this.data.colors[line]);
@@ -120,25 +115,25 @@ class MainChart extends Chart {
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
 
     if (
-      this.selectedLines.length &&
+      this.selectedCharts.length &&
       yPos < chart.startY &&
       yPos > chart.endY &&
       xPos > chart.startX &&
       xPos < chart.endX
     ) {
-      this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
+      this.hoverItem = findClosestItem(xPos, this.coords[this.selectedCharts[0]]);
 
       requestAnimationFrame(() => this.update(this.start, this.end));
     }
 
-    if (!this.selectedLines.length) {
+    if (!this.selectedCharts.length) {
       console.log("No lines selected");
       // ERROR OUTPUT HERE: No lines selected
     }
   };
 
   drawAxis() {
-    this.ctx.lineWidth = 1;
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.moveTo(this.chart.startX, this.chart.startY);
     this.ctx.lineTo(this.chart.endX, this.chart.startY);
@@ -154,16 +149,17 @@ class MainChart extends Chart {
 
     let currentId = this.firstItemId - 1;
 
-    this.coords[this.selectedLines[0]].map((value, i) => {
+    this.coords[this.selectedCharts[0]].map((value, i) => {
       currentId++;
       if (!this.dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
-      this.ctx.fillText(this.dates[currentId], x, this.chart.startY + this.chart.height * 0.06);
+      this.ctx.fillText(this.dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
   }
 
   drawGridLines() {
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
+    this.ctx.lineWidth = 1;
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.strokeStyle = axisLinesColor;
     this.ctx.fillStyle = axisFontColor;
@@ -187,15 +183,15 @@ class MainChart extends Chart {
 
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.moveTo(x, y);
-    ctx.arc(x, y, 6, 0, Math.PI * 2, false);
+    ctx.arc(x, y, 8, 0, Math.PI * 2, false);
     ctx.stroke();
 
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.fillStyle = bgColorDay;
-    ctx.arc(x, y, 4, 0, Math.PI * 2, false);
+    ctx.arc(x, y, 6, 0, Math.PI * 2, false);
     ctx.fill();
   }
 
@@ -236,7 +232,7 @@ class MainChart extends Chart {
     this.tooltipDate.innerHTML = label;
     this.tooltipInfo.innerHTML = "";
 
-    this.selectedLines.map(line => {
+    this.selectedCharts.map(line => {
       const number = this.data.columns[line][hoverItem];
       const label = this.data.names[line];
       const color = this.data.colors[line];

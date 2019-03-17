@@ -6,7 +6,6 @@ function loadChartApp(options) {
   const { data, appContainer } = options;
   const title = options.title || "Chart";
   const lines = data.names;
-  let selectedLines = [];
 
   const container = document.createElement("div");
   container.name = title;
@@ -24,26 +23,56 @@ function loadChartApp(options) {
   container.appendChild(mainChartContainer);
   container.appendChild(navChartContainer);
 
+  //  Adding checkboxes
+  const checkboxDiv = document.createElement("div");
+  checkboxDiv.id = "controls";
+  let selectedCharts = [];
+
   for (let name in lines) {
-    const inputDiv = document.getElementById("controls");
-    const checkbox = document.createElement("input");
-    const checkboxText = document.createTextNode(lines[name]);
-    checkbox.type = "checkbox";
-    checkbox.name = name;
-    checkbox.checked = "true";
-    selectedLines.push(name);
-    inputDiv.appendChild(checkboxText);
-    inputDiv.appendChild(checkbox);
-    checkbox.addEventListener("change", onCheckboxChange);
+    const checkbox = createCheckbox(name);
+    checkboxDiv.appendChild(checkbox);
   }
 
+  function createCheckbox(id) {
+    const container = document.createElement("div");
+    const checkbox = document.createElement("input");
+    checkbox.addEventListener("change", onCheckboxChange);
+    const checkboxText = document.createTextNode(lines[id]);
+    checkbox.type = "checkbox";
+    checkbox.id = id;
+    checkbox.checked = "true";
+    const text = document.createTextNode(id);
+    const label = document.createElement("label");
+    label.htmlFor = id;
+    const span = document.createElement("span");
+    const ins = document.createElement("ins");
+    const i = document.createElement("i");
+    i.innerHTML = id;
+    ins.appendChild(i);
+    label.appendChild(span);
+    label.appendChild(text);
+    label.appendChild(ins);
+    container.appendChild(checkbox);
+    container.appendChild(label);
+    selectedCharts.push(id);
+    return container;
+  }
+  //   <label for='one'>
+  //     <span></span>
+  //     Off with your head
+  //     <ins><i>Off with your head</i></ins>
+  //   </label>
+
+  container.appendChild(checkboxDiv);
+
+  //    Creating instances of charts elements
   const mainChart = new MainChart({
     name: "main_chart",
     container: mainChartContainer,
     appContainer: container,
     data,
-    selectedLines,
-    ratio: 0.35
+    selectedCharts,
+    ratio: 0.5
   });
 
   const navChart = new NavChart({
@@ -51,7 +80,7 @@ function loadChartApp(options) {
     container: navChartContainer,
     appContainer: container,
     data,
-    selectedLines,
+    selectedCharts,
     ratio: 0.15
   });
 
@@ -60,7 +89,7 @@ function loadChartApp(options) {
     container: navChartContainer,
     appContainer: container,
     data: [],
-    selectedLines,
+    selectedCharts,
     ratio: 0.15,
     controlledChart: mainChart
   });
@@ -78,13 +107,11 @@ function loadChartApp(options) {
   }
 
   function onCheckboxChange(e) {
-    const { checked, name } = e.target;
-    checked && !selectedLines.includes(name) && selectedLines.push(name);
-    !checked &&
-      selectedLines.includes(name) &&
-      selectedLines.splice(selectedLines.indexOf(name), 1);
-    mainChart.updateSelectedLines(selectedLines);
-    navChart.update(data, selectedLines);
+    const { checked, id } = e.target;
+    checked && !selectedCharts.includes(id) && selectedCharts.push(id);
+    !checked && selectedCharts.includes(id) && selectedCharts.splice(selectedCharts.indexOf(id), 1);
+    mainChart.updateSelectedCharts(selectedCharts);
+    navChart.updateSelectedCharts(selectedCharts);
   }
 
   appContainer.appendChild(container);

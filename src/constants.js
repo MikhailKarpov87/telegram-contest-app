@@ -4,6 +4,7 @@ export const hoverLineColor = "#DFE6EB";
 export const chartFontSize = 14;
 export const bgColorDay = "#FFFFFF";
 export const bgColorNight = "#242F3E";
+export const navOverlayColor = "rgba(242, 247, 249, 0.85)";
 
 export const months = [
   "Jan",

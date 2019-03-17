@@ -8,6 +8,7 @@ class Chart {
     this.lineWidth = 4;
     this.start = 0;
     this.end = 1;
+    this.selectedCharts = options.selectedCharts;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.container = options.container;
   }
@@ -55,11 +56,17 @@ class Chart {
     this.update(this.start, this.end);
   };
 
+  updateSelectedCharts(selectedCharts) {
+    this.selectedCharts = selectedCharts;
+    this.update(this.start, this.end);
+  }
+
   calcChartData(data, start, end) {
     const { chart } = this;
     let result = [];
-
-    this.startX = start > 0.01 ? 0 : chart.startX;
+    const rangeToStart = this.spaceBetween / this.chart.width;
+    console.log(rangeToStart);
+    this.startX = start > rangeToStart ? 0 : this.chart.startX - chart.startX * start;
     this.endX = end > 0.99 ? chart.endX : this.canvas.width;
 
     //  Calculating data for first line
@@ -124,6 +131,7 @@ class Chart {
   onMove = () => {};
   onDown = () => {};
   onUp = () => {};
+  onLeave = () => {};
 }
 
 export default Chart;
