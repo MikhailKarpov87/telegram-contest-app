@@ -11,6 +11,7 @@ import {
 import Chart from "./chart";
 
 import { findClosestItem, getYAxisMaxValue } from "./helpers";
+import { runInThisContext } from "vm";
 
 class MainChart extends Chart {
   constructor(options) {
@@ -18,6 +19,9 @@ class MainChart extends Chart {
     this.start = 0;
     this.end = 1;
     this.hoverItem = null;
+    this.dateItemsToShow = 6;
+    this.nthDate = 1;
+    this.newDates = {};
   }
 
   onNavChange = (start, end) => {
@@ -25,7 +29,41 @@ class MainChart extends Chart {
     requestAnimationFrame(() => this.update(this.data, start, end));
   };
 
+  makeDatesArray(data, nth) {
+    let result = {};
+    data.map((value, i) => {
+      if (i % nth) return;
+      const dateValue = new Date(value);
+      const date = months[dateValue.getMonth()] + " " + dateValue.getDate();
+      result[i] = date;
+    });
+
+    return result;
+  }
+
   update = (data, start, end) => {
+    const dates = data.columns.x;
+    const range = (end - start).toFixed(3);
+    if (!this.dates) this.dates = this.makeDatesArray(dates, this.nthDate);
+
+    if (range !== this.range) {
+      this.nthDate = 1;
+      let datesShown = Math.ceil(Object.keys(this.dates).length * range);
+
+      do {
+        this.nthDate *= 2;
+        this.newDates = this.makeDatesArray(dates, this.nthDate);
+        datesShown = Math.ceil(Object.keys(this.newDates).length * range);
+      } while (datesShown >= this.dateItemsToShow + 1);
+
+      this.range = range;
+    }
+
+    if (Object.keys(this.dates).length !== Object.keys(this.newDates).length) {
+      this.dates = this.newDates;
+      console.log("rerender dates");
+    }
+
     this.start = start;
     this.end = end;
     //  Here probably should go some func to compare newData and this.data
@@ -40,12 +78,12 @@ class MainChart extends Chart {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawAxis();
     this.drawGridLines();
-    this.drawDatesLegend(data.columns.x);
 
     this.hoverItem && this.drawHoverGrid();
 
     this.selectedLines.map(line => {
-      this.coords[line] = this.calcCoordinates(data.columns[line], start, end);
+      this.coords[line] = this.calcChartData(data.columns[line], start, end);
+      console.log(this.coords[line]);
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
       this.drawChart(this.coords[line], line, data.colors[line]);
       if (this.hoverItem !== null) {
@@ -53,6 +91,8 @@ class MainChart extends Chart {
         this.showTooltip();
       }
     });
+
+    this.drawDatesLine();
   };
 
   onMove = e => {
@@ -72,6 +112,9 @@ class MainChart extends Chart {
       this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
 
       requestAnimationFrame(() => this.update(this.data, this.start, this.end));
+    } else {
+      console.log("No lines selected");
+      // ERROR OUTPUT HERE: No lines selected
     }
   };
 
@@ -84,22 +127,19 @@ class MainChart extends Chart {
     this.ctx.stroke();
   }
 
-  drawDatesLegend(data) {
+  drawDatesLine(data) {
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.fillStyle = axisFontColor;
+    this.dates;
 
-    //  Calculate -nth number for drawing only up to 6 dates
-    const nthDate = data.length > 6 ? Math.round(data.length / 6) : 1;
+    let currentId = this.firstItemId - 1;
 
-    data.map((value, i) => {
-      //Draw only -nth dates
-      if (!(i % nthDate)) {
-        const pos = this.chart.startX + (i * this.chart.width) / this.itemsNum;
-        const date = new Date(value);
-        const label = months[date.getMonth()] + " " + date.getDate();
-        this.ctx.fillText(label, pos, this.chart.startY + this.chart.height * 0.06);
-      }
+    this.coords[this.selectedLines[0]].map((value, i) => {
+      currentId++;
+      if (!this.dates[currentId]) return;
+      const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
+      this.ctx.fillText(this.dates[currentId], x, this.chart.startY + this.chart.height * 0.06);
     });
   }
 
@@ -152,7 +192,8 @@ class MainChart extends Chart {
   }
 
   showTooltip() {
-    const { ctx, chart, hoverItem } = this;
+    const { ctx, chart } = this;
+    const hoverItem = this.hoverItem + this.firstItemId;
     const x = chart.startX + (hoverItem / this.itemsNum) * chart.width;
     const tooltip = document.getElementById("tooltip");
     const tooltipDate = document.getElementsByClassName("tooltip-date")[0];

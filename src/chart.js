@@ -58,27 +58,27 @@ class Chart {
     this.update(this.data, this.start, this.end);
   };
 
-  calcCoordinates(data, start, end) {
+  calcChartData(data, start, end) {
     const { chart } = this;
     let result = [];
 
-    const startX = start > 0.01 ? 0 : chart.startX;
-    const endX = end > 0.99 ? chart.endX : this.canvas.width;
+    this.startX = start > 0.01 ? 0 : chart.startX;
+    this.endX = end > 0.99 ? chart.endX : this.canvas.width;
 
     //  Calculating data for first line
-    const firstItemId = Math.floor(start * data.length);
+    this.firstItemId = Math.floor(start * data.length);
     const initialItemFraction = 1 / data.length;
-    const startFraction = 1 - (start - initialItemFraction * firstItemId) / initialItemFraction;
-    const firstValue = data[firstItemId];
-    const secondValue = data[firstItemId + 1];
-    const startValue = firstValue + (secondValue - firstValue) * (1 - startFraction);
+    this.startFraction = 1 - (start - initialItemFraction * this.firstItemId) / initialItemFraction;
+    const firstValue = data[this.firstItemId];
+    const secondValue = data[this.firstItemId + 1];
+    const startValue = firstValue + (secondValue - firstValue) * (1 - this.startFraction);
 
     // Calculating data for last line
-    const lastItemId = Math.ceil(end * data.length);
-    const endFraction = 1 - (initialItemFraction * lastItemId - end) / initialItemFraction;
+    this.lastItemId = Math.ceil(end * data.length);
+    const endFraction = 1 - (initialItemFraction * this.lastItemId - end) / initialItemFraction;
 
     //  Slicing array
-    const slicedData = data.slice(firstItemId, lastItemId);
+    const slicedData = data.slice(this.firstItemId, this.lastItemId);
 
     // Calculating value for last item
     const arraySize = slicedData.length - 1;
@@ -86,17 +86,18 @@ class Chart {
       slicedData[arraySize] +
       (slicedData[arraySize - 1] - slicedData[arraySize]) * (1 - endFraction);
 
-    const spaceBetween = (endX - startX) / (slicedData.length - 3 + startFraction + endFraction);
+    this.spaceBetween =
+      (this.endX - this.startX) / (slicedData.length - 3 + this.startFraction + endFraction);
 
     const y0 = Math.round(chart.startY - (startValue / this.maxValueY) * chart.height);
-    const x0 = Math.round(startX);
+    const x0 = Math.round(this.startX);
 
     const yLast = Math.round(chart.startY - (endValue / this.maxValueY) * chart.height);
-    const xLast = Math.round(endX);
+    const xLast = Math.round(this.endX);
 
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
-      const x = Math.round(startX + (i - 1 + startFraction) * spaceBetween);
+      const x = Math.round(this.startX + (i - 1 + this.startFraction) * this.spaceBetween);
       result.push({ x, y });
     });
 

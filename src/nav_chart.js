@@ -20,7 +20,7 @@ class NavChart extends Chart {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.selectedLines.map(line => {
-      this.coords = this.calcCoordinates(data.columns[line], this.start, this.end);
+      this.coords = this.calcChartData(data.columns[line], this.start, this.end);
       this.drawChart(this.coords, line, data.colors[line]);
     });
   };
