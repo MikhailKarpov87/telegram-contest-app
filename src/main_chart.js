@@ -11,7 +11,6 @@ import {
 import Chart from "./chart";
 
 import { findClosestItem, getYAxisMaxValue } from "./helpers";
-import { runInThisContext } from "vm";
 
 class MainChart extends Chart {
   constructor(options) {
@@ -41,11 +40,25 @@ class MainChart extends Chart {
     return result;
   }
 
+  getMaxValue(data, start, end) {
+    return Math.max(
+      ...this.selectedLines.map(line => Math.max(...data.columns[line].slice(start, end)))
+    );
+  }
+
   update = (data, start, end) => {
     const dates = data.columns.x;
     const range = (end - start).toFixed(3);
+    this.start = start;
+    this.end = end;
+
+    this.maxNum = this.getMaxValue(data, this.firstItemId, this.lastItemId);
+    this.newMaxValueY = getYAxisMaxValue(this.maxNum);
+
+    if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
     if (!this.dates) this.dates = this.makeDatesArray(dates, this.nthDate);
 
+    //  If range was updated - recalculate dates
     if (range !== this.range) {
       this.nthDate = 1;
       let datesShown = Math.ceil(Object.keys(this.dates).length * range);
@@ -59,20 +72,17 @@ class MainChart extends Chart {
       this.range = range;
     }
 
+    //  Calling animate dates func here
     if (Object.keys(this.dates).length !== Object.keys(this.newDates).length) {
       this.dates = this.newDates;
       console.log("rerender dates");
     }
 
-    this.start = start;
-    this.end = end;
-    //  Here probably should go some func to compare newData and this.data
-    //  For animation, etc.
+    if (this.newMaxValueY !== this.maxValueY) {
+      this.maxValueY = this.newMaxValueY;
+      console.log("rerender values");
+    }
 
-    this.maxNum = Math.max(...this.selectedLines.map(line => Math.max(...data.columns[line])));
-    if (this.maxNum === 0) return;
-
-    this.maxValueY = getYAxisMaxValue(this.maxNum);
     this.itemsNum = data.columns.x.length;
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -83,7 +93,6 @@ class MainChart extends Chart {
 
     this.selectedLines.map(line => {
       this.coords[line] = this.calcChartData(data.columns[line], start, end);
-      console.log(this.coords[line]);
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
       this.drawChart(this.coords[line], line, data.colors[line]);
       if (this.hoverItem !== null) {
@@ -112,7 +121,9 @@ class MainChart extends Chart {
       this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
 
       requestAnimationFrame(() => this.update(this.data, this.start, this.end));
-    } else {
+    }
+
+    if (!this.selectedLines.length) {
       console.log("No lines selected");
       // ERROR OUTPUT HERE: No lines selected
     }
