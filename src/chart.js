@@ -9,14 +9,7 @@ class Chart {
     this.start = 0;
     this.end = 1;
     this.pixelRatio = window.devicePixelRatio || 1;
-    this.selectedLines = options.selectedLines;
-    if (document.getElementById(options.container)) {
-      this.container = document.getElementById(options.container);
-    } else {
-      this.container = document.createElement("div");
-      this.container.id = options.container;
-      document.getElementById("app").appendChild(this.container);
-    }
+    this.container = options.container;
   }
 
   setup = () => {
