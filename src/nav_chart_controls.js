@@ -17,6 +17,7 @@ class NavChartControls extends Chart {
     this.clickedOnStartBar = false;
     this.clickedOnEndBar = false;
     this.clickedOnCenterBar = false;
+    this.pixelRatio = 1;
   }
 
   update = () => {

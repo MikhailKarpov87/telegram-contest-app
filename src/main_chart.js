@@ -80,7 +80,7 @@ class MainChart extends Chart {
 
     if (this.newMaxValueY !== this.maxValueY) {
       this.maxValueY = this.newMaxValueY;
-      console.log("rerender values");
+      console.log("rerender chart and values");
     }
 
     this.itemsNum = data.columns.x.length;

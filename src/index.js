@@ -32,14 +32,6 @@ function initApp(data) {
     ratio: 0.35
   });
 
-  const navChart = new NavChart({
-    name: "nav_chart",
-    container: "nav_chart_container",
-    data,
-    selectedLines,
-    ratio: 0.15
-  });
-
   const navChartControls = new NavChartControls({
     name: "nav_chart_controls",
     container: "nav_chart_container",
@@ -47,6 +39,14 @@ function initApp(data) {
     selectedLines,
     ratio: 0.15,
     controlledChart: mainChart
+  });
+
+  const navChart = new NavChart({
+    name: "nav_chart",
+    container: "nav_chart_container",
+    data,
+    selectedLines,
+    ratio: 0.15
   });
 
   function setup() {
@@ -57,8 +57,8 @@ function initApp(data) {
 
   function onResize() {
     mainChart.resize();
-    navChart.resize();
     navChartControls.resize();
+    navChart.resize();
   }
 
   function onCheckboxChange(e) {
