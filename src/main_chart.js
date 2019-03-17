@@ -21,11 +21,12 @@ class MainChart extends Chart {
     this.dateItemsToShow = 6;
     this.nthDate = 1;
     this.newDates = {};
+    this.createTooltip();
   }
 
   onNavChange = (start, end) => {
     this.hoverItem = null;
-    requestAnimationFrame(() => this.update(this.data, start, end));
+    requestAnimationFrame(() => this.update(start, end));
   };
 
   makeDatesArray(data, nth) {
@@ -46,13 +47,18 @@ class MainChart extends Chart {
     );
   }
 
-  update = (data, start, end) => {
-    const dates = data.columns.x;
+  updateSelectedLines(selectedLines) {
+    this.selectedLines = selectedLines;
+    this.update(this.start, this.end);
+  }
+
+  update = (start, end) => {
+    const dates = this.data.columns.x;
     const range = (end - start).toFixed(3);
     this.start = start;
     this.end = end;
 
-    this.maxNum = this.getMaxValue(data, this.firstItemId, this.lastItemId);
+    this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
     this.newMaxValueY = getYAxisMaxValue(this.maxNum);
 
     if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
@@ -83,7 +89,7 @@ class MainChart extends Chart {
       console.log("rerender chart and values");
     }
 
-    this.itemsNum = data.columns.x.length;
+    this.itemsNum = dates.length;
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawAxis();
@@ -92,12 +98,14 @@ class MainChart extends Chart {
     this.hoverItem && this.drawHoverGrid();
 
     this.selectedLines.map(line => {
-      this.coords[line] = this.calcChartData(data.columns[line], start, end);
+      this.coords[line] = this.calcChartData(this.data.columns[line], start, end);
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
-      this.drawChart(this.coords[line], line, data.colors[line]);
+      this.drawChart(this.coords[line], line, this.data.colors[line]);
       if (this.hoverItem !== null) {
         this.drawHoverPoint(this.coords[line][this.hoverItem], this.data.colors[line]);
         this.showTooltip();
+      } else {
+        this.hideTooltip();
       }
     });
 
@@ -120,7 +128,7 @@ class MainChart extends Chart {
     ) {
       this.hoverItem = findClosestItem(xPos, this.coords[this.selectedLines[0]]);
 
-      requestAnimationFrame(() => this.update(this.data, this.start, this.end));
+      requestAnimationFrame(() => this.update(this.start, this.end));
     }
 
     if (!this.selectedLines.length) {
@@ -202,17 +210,31 @@ class MainChart extends Chart {
     ctx.stroke();
   }
 
+  createTooltip() {
+    this.tooltip = document.createElement("div");
+    this.tooltip.className = "tooltip";
+    this.tooltipDate = document.createElement("div");
+    this.tooltipDate.className = "tooltip-date";
+    this.tooltipInfo = document.createElement("div");
+    this.tooltipInfo.className = "tooltip-info";
+    this.tooltip.appendChild(this.tooltipDate);
+    this.tooltip.appendChild(this.tooltipInfo);
+    this.tooltip.style = "display:none;";
+    this.container.appendChild(this.tooltip);
+  }
+
   showTooltip() {
-    const { ctx, chart } = this;
     const hoverItem = this.hoverItem + this.firstItemId;
-    const x = chart.startX + (hoverItem / this.itemsNum) * chart.width;
-    const tooltip = document.getElementById("tooltip");
-    const tooltipDate = document.getElementsByClassName("tooltip-date")[0];
-    const tooltipInfo = document.getElementsByClassName("tooltip-info")[0];
+    const x = Math.round(
+      this.startX -
+        60 +
+        ((this.hoverItem - 1 + this.startFraction) * this.spaceBetween) / this.pixelRatio
+    );
+
     const date = new Date(this.data.columns.x[hoverItem]);
     const label = weekdays[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate();
-    tooltipDate.innerHTML = label;
-    tooltipInfo.innerHTML = "";
+    this.tooltipDate.innerHTML = label;
+    this.tooltipInfo.innerHTML = "";
 
     this.selectedLines.map(line => {
       const number = this.data.columns[line][hoverItem];
@@ -230,8 +252,13 @@ class MainChart extends Chart {
       labelDiv.innerHTML = label;
       infoDiv.appendChild(numDiv);
       infoDiv.appendChild(labelDiv);
-      tooltipInfo.appendChild(infoDiv);
+      this.tooltipInfo.appendChild(infoDiv);
     });
+    this.tooltip.style = `display:block;left:${x}px;`;
+  }
+
+  hideTooltip() {
+    this.tooltip.style = "display:none";
   }
 }
 

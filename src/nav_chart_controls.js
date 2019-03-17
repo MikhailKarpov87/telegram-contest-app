@@ -22,10 +22,10 @@ class NavChartControls extends Chart {
 
   update = () => {
     this.rect = this.canvas.getBoundingClientRect();
-    this.startX = this.chart.startX / this.pixelRatio;
-    this.startY = this.chart.startY / this.pixelRatio;
-    this.endX = this.chart.endX / this.pixelRatio;
-    this.endY = this.chart.endY / this.pixelRatio;
+    this.startX = this.chart.startX;
+    this.startY = this.chart.startY;
+    this.endX = this.chart.endX;
+    this.endY = this.chart.endY;
     this.startPos = this.startBarPos * this.chart.width;
     this.endPos = this.endBarPos * this.chart.width;
 
@@ -36,9 +36,8 @@ class NavChartControls extends Chart {
 
   drawNavOverlay() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    const startPos = (this.startBarPos * this.chart.width) / this.pixelRatio + this.startX;
-    const endPos =
-      (this.endBarPos * this.chart.width) / this.pixelRatio + this.chart.startX / this.pixelRatio;
+    const startPos = this.startBarPos * this.chart.width + this.startX;
+    const endPos = this.endBarPos * this.chart.width + this.chart.startX;
     this.drawBoundingArea(Math.round(startPos), Math.round(endPos));
     this.drawSlider(Math.round(startPos), Math.round(endPos));
   }
@@ -68,7 +67,7 @@ class NavChartControls extends Chart {
 
   isHoverSlider(x) {
     //  Outside of Slider
-    if (this.mouse.y < 0 && this.mouse.y > this.startY * this.pixelRatio) {
+    if (this.mouse.y < 0 && this.mouse.y > this.startY) {
       if (this.mouse.hover) document.body.style.cursor = "auto";
       this.mouse.hover = null;
       return false;
@@ -102,8 +101,8 @@ class NavChartControls extends Chart {
   }
 
   onMove = e => {
-    this.mouse.x = (e.x - this.rect.left) * this.pixelRatio - this.chart.startX;
-    this.mouse.y = (e.y + this.rect.top + this.endY) * this.pixelRatio - this.chart.startY;
+    this.mouse.x = e.x - this.rect.left - this.chart.startX;
+    this.mouse.y = e.y + this.rect.top + this.endY - this.chart.startY;
     this.isHoverSlider(this.mouse.x);
 
     if (this.mouse.click) {

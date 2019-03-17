@@ -16,7 +16,7 @@ export function loadData(url) {
 }
 
 export function parseData(json) {
-  const data = json[0];
+  const data = json[4];
   let result = { columns: {} };
 
   for (let item of data.columns) {

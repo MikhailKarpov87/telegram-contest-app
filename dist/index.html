@@ -43,12 +43,10 @@
 
       .tooltip {
         position: absolute;
-        margin: 10px auto;
-        font-weight: 500;
         background-color: #ffffff;
         padding: 8px 15px;
-        top: 30px;
-        left: 20%;
+        top: 0;
+        left: 0;
         z-index: 1;
         border-radius: 5px;
         -webkit-box-shadow: 0px 1px 3px 0px rgba(189, 187, 189, 1);
@@ -56,10 +54,19 @@
         box-shadow: 0px 1px 3px 0px rgba(189, 187, 189, 1);
       }
 
+      .tooltip .tooltip-date {
+        font-weight: 500;
+      }
+
       .tooltip .tooltip-info {
         padding-top: 10px;
         display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
         justify-content: space-between;
+      }
+      .tooltip-info > div {
+        flex-basis: 35%;
       }
 
       .tooltip .tooltip-info .num {
@@ -75,22 +82,7 @@
   </head>
   <body>
     <h2>Followers</h2>
-    <div class="app" id="app">
-      <div class="tooltip">
-        <div class="tooltip-date">Sat, Feb 24</div>
-        <div class="tooltip-info">
-          <div>
-            <div class="num">145</div>
-            <div class="label">Joined</div>
-          </div>
-
-          <div>
-            <div class="num">67</div>
-            <div class="label">Left</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="app" id="app"></div>
 
     <div class="controls" id="controls"></div>
 

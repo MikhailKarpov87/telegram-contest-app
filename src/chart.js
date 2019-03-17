@@ -24,9 +24,13 @@ class Chart {
     this.canvas.id = this.name;
     this.canvas.addEventListener("mousemove", this.onMove);
 
-    if ((this.name = "nav_chat_controls")) {
+    if ((this.name = "nav_chart_controls")) {
       this.canvas.addEventListener("mousedown", this.onDown);
       this.canvas.addEventListener("mouseup", this.onUp);
+      this.canvas.addEventListener("mouseleave", this.onLeave);
+    }
+
+    if ((this.name = "main_chart")) {
       this.canvas.addEventListener("mouseleave", this.onLeave);
     }
 
@@ -55,7 +59,7 @@ class Chart {
     this.chart.startY = Math.round(0.85 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-    this.update(this.data, this.start, this.end);
+    this.update(this.start, this.end);
   };
 
   calcChartData(data, start, end) {
