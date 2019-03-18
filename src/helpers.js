@@ -1,4 +1,4 @@
-// import "whatwg-fetch";
+import "whatwg-fetch";
 
 export function loadData(url, id) {
   return fetch(url)

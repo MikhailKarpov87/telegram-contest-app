@@ -1,4 +1,5 @@
-export const axisFontColor = "#96A2AA";
+// export const axisFontColor = "#96A2AA";
+export const axisFontColor = opacity => `rgba(150, 162, 170, ${opacity})`;
 export const axisLinesColor = "#ECF0F3";
 export const hoverLineColor = "#DFE6EB";
 export const chartFontSize = 14;

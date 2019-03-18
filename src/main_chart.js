@@ -15,13 +15,12 @@ import { findClosestItem, getYAxisMaxValue } from "./helpers";
 class MainChart extends Chart {
   constructor(options) {
     super(options);
-    this.start = 0;
-    this.end = 1;
     this.hoverItem = null;
     this.dateItemsToShow = 6;
     this.nthDate = 1;
     this.newDates = {};
     this.createTooltip();
+    this.alpha = 1;
   }
 
   onNavChange = (start, end) => {
@@ -48,6 +47,7 @@ class MainChart extends Chart {
   }
 
   update = (start, end) => {
+    // console.log("update started...");
     const dates = this.data.columns.x;
     const range = (end - start).toFixed(3);
     this.start = start;
@@ -74,10 +74,14 @@ class MainChart extends Chart {
     }
 
     //  Calling animate dates func here
-    if (Object.keys(this.dates).length !== Object.keys(this.newDates).length) {
+    if (Object.keys(this.dates).length !== Object.keys(this.newDates).length && !this.prevDates) {
+      this.prevDates = this.dates;
       this.dates = this.newDates;
       console.log("rerender dates");
     }
+
+    // console.log(this.prevDates);
+    // console.log(this.dates);
 
     if (this.newMaxValueY !== this.maxValueY) {
       this.maxValueY = this.newMaxValueY;
@@ -104,7 +108,19 @@ class MainChart extends Chart {
       }
     });
 
-    this.drawDatesLine();
+    if (this.alpha < 1) this.drawDatesLine(this.prevDates, this.alpha);
+    this.drawDatesLine(this.dates, 1);
+
+    if (this.prevDates) {
+      this.alpha = (this.alpha - 0.001).toFixed(3);
+      requestAnimationFrame(() => this.update(this.start, this.end));
+
+      if (this.alpha <= 0) {
+        console.log("alpha = 1");
+        this.alpha = 1;
+        this.prevDates = null;
+      }
+    }
   };
 
   onMove = e => {
@@ -141,28 +157,35 @@ class MainChart extends Chart {
     this.ctx.stroke();
   }
 
-  drawDatesLine(data) {
+  drawDatesLine(dates, alpha) {
+    this.ctx.save();
+
+    if (this.prevDates !== null) {
+      // console.log(alpha);
+    }
+
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
-    this.ctx.fillStyle = axisFontColor;
-    this.dates;
+    this.ctx.fillStyle = axisFontColor(alpha);
 
     let currentId = this.firstItemId - 1;
 
     this.coords[this.selectedCharts[0]].map((value, i) => {
       currentId++;
-      if (!this.dates[currentId]) return;
+      if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
-      this.ctx.fillText(this.dates[currentId], x, this.chart.startY + fontSize * 1.5);
+      this.ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
+    this.ctx.restore();
   }
 
   drawGridLines() {
+    const alpha = 1;
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.lineWidth = 1;
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.strokeStyle = axisLinesColor;
-    this.ctx.fillStyle = axisFontColor;
+    this.ctx.fillStyle = axisFontColor(alpha);
 
     for (let i = 1; i <= 5; i++) {
       const height = this.chart.startY - (i * this.chart.height) / 5;

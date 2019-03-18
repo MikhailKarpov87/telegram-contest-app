@@ -6,6 +6,8 @@ function loadChartApp(options) {
   const { data, appContainer } = options;
   const title = options.title || "Chart";
   const lines = data.names;
+  const start = options.start || 0.6;
+  const end = options.end || 0.9;
 
   const container = document.createElement("div");
   container.name = title;
@@ -37,7 +39,6 @@ function loadChartApp(options) {
     const container = document.createElement("div");
     const checkbox = document.createElement("input");
     checkbox.addEventListener("change", onCheckboxChange);
-    const checkboxText = document.createTextNode(lines[id]);
     checkbox.type = "checkbox";
     checkbox.id = id;
     checkbox.checked = "true";
@@ -57,11 +58,6 @@ function loadChartApp(options) {
     selectedCharts.push(id);
     return container;
   }
-  //   <label for='one'>
-  //     <span></span>
-  //     Off with your head
-  //     <ins><i>Off with your head</i></ins>
-  //   </label>
 
   container.appendChild(checkboxDiv);
 
@@ -71,6 +67,8 @@ function loadChartApp(options) {
     container: mainChartContainer,
     appContainer: container,
     data,
+    start,
+    end,
     selectedCharts,
     ratio: 0.5
   });
@@ -90,6 +88,8 @@ function loadChartApp(options) {
     appContainer: container,
     data: [],
     selectedCharts,
+    start,
+    end,
     ratio: 0.15,
     controlledChart: mainChart
   });
@@ -114,9 +114,9 @@ function loadChartApp(options) {
     navChart.updateSelectedCharts(selectedCharts);
   }
 
+  setup();
   appContainer.appendChild(container);
 
-  window.addEventListener("load", setup);
   window.addEventListener("resize", onResize);
 }
 

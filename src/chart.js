@@ -6,21 +6,25 @@ class Chart {
     this.data = options.data;
     this.name = options.name;
     this.lineWidth = 4;
-    this.start = 0;
-    this.end = 1;
+    this.start = options.start;
+    this.end = options.end;
     this.selectedCharts = options.selectedCharts;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.container = options.container;
   }
 
   setup = () => {
+    console.log("this.canvas");
     this.canvas = document.createElement("canvas");
+
     this.canvas.id = this.name;
     this.canvas.addEventListener("mousemove", this.onMove);
 
     if ((this.name = "nav_chart_controls")) {
       this.canvas.addEventListener("mousedown", this.onDown);
+      this.canvas.addEventListener("pointerdown", this.onDown);
       this.canvas.addEventListener("mouseup", this.onUp);
+      this.canvas.addEventListener("pointerup", this.onUp);
       this.canvas.addEventListener("mouseleave", this.onLeave);
     }
 
@@ -65,7 +69,6 @@ class Chart {
     const { chart } = this;
     let result = [];
     const rangeToStart = this.spaceBetween / this.chart.width;
-    console.log(rangeToStart);
     this.startX = start > rangeToStart ? 0 : this.chart.startX - chart.startX * start;
     this.endX = end > 0.99 ? chart.endX : this.canvas.width;
 

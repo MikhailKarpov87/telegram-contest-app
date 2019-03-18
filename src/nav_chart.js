@@ -6,6 +6,8 @@ class NavChart extends Chart {
   constructor(options) {
     super(options);
     this.lineWidth = 3;
+    this.start = 0;
+    this.end = 1;
   }
 
   update = (start, end) => {

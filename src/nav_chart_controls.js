@@ -5,8 +5,8 @@ class NavChartControls extends Chart {
   constructor(options) {
     super(options);
     this.controlledChart = options.controlledChart;
-    this.startBarPos = 0.6;
-    this.endBarPos = 0.9;
+    this.startBarPos = options.start;
+    this.endBarPos = options.end;
     this.barWidth = 6;
     this.mouse = {
       x: undefined,
@@ -138,8 +138,12 @@ class NavChartControls extends Chart {
     }
   };
 
-  onDown = () => {
+  onDown = e => {
+    this.mouse.x = e.x - this.rect.left - this.chart.startX;
+    this.isHoverSlider(this.mouse.x);
+
     if (this.mouse.hover) {
+      // alert("this");
       this.mouse.click = this.mouse.hover;
 
       if (this.mouse.hover === "centerBarPos")
