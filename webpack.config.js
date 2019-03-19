@@ -1,12 +1,10 @@
 const path = require("path");
-const Dotenv = require("dotenv-webpack");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimizer: [new UglifyJsPlugin()]
   },
-  plugins: [new Dotenv()],
   module: {
     rules: [
       {

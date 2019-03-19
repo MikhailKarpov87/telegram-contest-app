@@ -8,23 +8,25 @@ class Chart {
     this.lineWidth = 4;
     this.start = options.start;
     this.end = options.end;
+    this.range = (this.end - this.start).toFixed(5);
     this.selectedCharts = options.selectedCharts;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.container = options.container;
   }
 
   setup = () => {
-    console.log("this.canvas");
     this.canvas = document.createElement("canvas");
 
     this.canvas.id = this.name;
     this.canvas.addEventListener("mousemove", this.onMove);
+    this.canvas.addEventListener("touchmove", this.onMove);
 
     if ((this.name = "nav_chart_controls")) {
+      this.canvas.addEventListener("scroll", this.onScroll);
       this.canvas.addEventListener("mousedown", this.onDown);
-      this.canvas.addEventListener("pointerdown", this.onDown);
+      this.canvas.addEventListener("touchstart", this.onDown);
       this.canvas.addEventListener("mouseup", this.onUp);
-      this.canvas.addEventListener("pointerup", this.onUp);
+      this.canvas.addEventListener("touchend", this.onUp);
       this.canvas.addEventListener("mouseleave", this.onLeave);
     }
 
@@ -34,6 +36,7 @@ class Chart {
 
     this.ctx = this.canvas.getContext("2d");
     this.ctx.translate(0.5, 0.5);
+
     this.container.appendChild(this.canvas);
     this.resize();
   };
@@ -43,7 +46,9 @@ class Chart {
 
     const width =
       innerHeight < innerWidth ? Math.round(1.0 * innerWidth) : Math.round(1.0 * innerHeight);
-    const height = Math.round(this.ratio * width);
+    const windowHeight =
+      innerHeight < innerWidth ? Math.round(1.0 * innerHeight) : Math.round(1.0 * innerWidth);
+    const height = Math.round(this.ratio * windowHeight);
 
     this.container.style.width = width + "px";
     this.container.style.height = height + "px";

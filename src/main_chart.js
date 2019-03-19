@@ -21,6 +21,11 @@ class MainChart extends Chart {
     this.newDates = {};
     this.createTooltip();
     this.alpha = 1;
+
+    this.allDates = this.createDatesObject(options.data.columns.x);
+    this.updateDatesObject(this.start, this.end, this.allDates);
+    this.prevDates = {};
+    this.nthDate = 0;
   }
 
   onNavChange = (start, end) => {
@@ -28,16 +33,40 @@ class MainChart extends Chart {
     requestAnimationFrame(() => this.update(start, end));
   };
 
-  makeDatesArray(data, nth) {
+  createDatesObject = dates => {
     let result = {};
-    data.map((value, i) => {
-      if (i % nth) return;
-      const dateValue = new Date(value);
-      const date = months[dateValue.getMonth()] + " " + dateValue.getDate();
-      result[i] = date;
-    });
 
+    dates.map((value, i) => {
+      const dateValue = new Date(value);
+      result[i] = months[dateValue.getMonth()] + " " + dateValue.getDate();
+    });
     return result;
+  };
+
+  makeDatesObject(data, nth) {
+    let result = {};
+
+    for (let value in data) {
+      if (+value % 2 ** nth) continue;
+      result[value] = data[value];
+    }
+    return result;
+  }
+
+  updateDatesObject(start, end, dates) {
+    console.log(this.dates);
+    const range = (end - start).toFixed(5);
+
+    let datesShown = Math.ceil(Object.keys(dates).length * range);
+    while (datesShown >= this.dateItemsToShow + 1 || datesShown < this.dateItemsToShow - 2) {
+      if (datesShown >= this.dateItemsToShow + 1) this.nthDate += 1;
+      if (datesShown < this.dateItemsToShow - 2) this.nthDate -= 1;
+
+      this.newDates = this.makeDatesObject(this.allDates, this.nthDate);
+      datesShown = Math.ceil(Object.keys(this.newDates).length * range);
+    }
+
+    if (!this.dates) this.dates = this.newDates;
   }
 
   getMaxValue(data, start, end) {
@@ -47,9 +76,7 @@ class MainChart extends Chart {
   }
 
   update = (start, end) => {
-    // console.log("update started...");
-    const dates = this.data.columns.x;
-    const range = (end - start).toFixed(3);
+    const range = (end - start).toFixed(5);
     this.start = start;
     this.end = end;
 
@@ -57,38 +84,28 @@ class MainChart extends Chart {
     this.newMaxValueY = getYAxisMaxValue(this.maxNum);
 
     if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
-    if (!this.dates) this.dates = this.makeDatesArray(dates, this.nthDate);
+    if (!this.dates) this.dates = this.updateDatesObject(start, end, this.allDates);
 
     //  If range was updated - recalculate dates
     if (range !== this.range) {
-      this.nthDate = 1;
-      let datesShown = Math.ceil(Object.keys(this.dates).length * range);
-
-      do {
-        this.nthDate *= 2;
-        this.newDates = this.makeDatesArray(dates, this.nthDate);
-        datesShown = Math.ceil(Object.keys(this.newDates).length * range);
-      } while (datesShown >= this.dateItemsToShow + 1);
-
+      this.updateDatesObject(start, end, this.dates);
       this.range = range;
     }
 
     //  Calling animate dates func here
-    if (Object.keys(this.dates).length !== Object.keys(this.newDates).length && !this.prevDates) {
+    const datesNum = Object.keys(this.dates).length;
+    if (datesNum !== Object.keys(this.newDates).length && !this.prevDates) {
       this.prevDates = this.dates;
       this.dates = this.newDates;
       console.log("rerender dates");
     }
-
-    // console.log(this.prevDates);
-    // console.log(this.dates);
 
     if (this.newMaxValueY !== this.maxValueY) {
       this.maxValueY = this.newMaxValueY;
       console.log("rerender chart and values");
     }
 
-    this.itemsNum = dates.length;
+    this.itemsNum = this.allDates.length;
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawAxis();
@@ -98,8 +115,11 @@ class MainChart extends Chart {
 
     this.selectedCharts.map(line => {
       this.coords[line] = this.calcChartData(this.data.columns[line], start, end);
+
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
+
       this.drawChart(this.coords[line], line, this.data.colors[line]);
+
       if (this.hoverItem !== null) {
         this.drawHoverPoint(this.coords[line][this.hoverItem], this.data.colors[line]);
         this.showTooltip();
@@ -108,23 +128,36 @@ class MainChart extends Chart {
       }
     });
 
-    if (this.alpha < 1) this.drawDatesLine(this.prevDates, this.alpha);
-    this.drawDatesLine(this.dates, 1);
+    !this.prevDates && this.drawDatesLine(this.dates, 1);
 
+    //  Animating dates
     if (this.prevDates) {
-      this.alpha = (this.alpha - 0.001).toFixed(3);
+      this.animation =
+        Object.keys(this.prevDates).length > Object.keys(this.dates).length ? "fadeOut" : "fadeIn";
+      if (this.animation === "fadeOut") {
+        this.drawDatesLine(this.dates, 1);
+        this.drawDatesLine(this.prevDates, this.alpha);
+      }
+      if (this.animation === "fadeIn") {
+        this.drawDatesLine(this.dates, 1 - this.alpha);
+        this.drawDatesLine(this.prevDates, 1);
+      }
+      this.alpha = (this.alpha - 0.02).toFixed(3);
       requestAnimationFrame(() => this.update(this.start, this.end));
 
       if (this.alpha <= 0) {
-        console.log("alpha = 1");
         this.alpha = 1;
         this.prevDates = null;
+        this.animation = null;
       }
     }
   };
 
   onMove = e => {
-    const { x, y } = e;
+    e.preventDefault();
+    const x = e.touches ? e.touches[0].pageX : e.x;
+    const y = e.touches ? e.touches[0].pageY : e.y;
+
     const { chart } = this;
     const rect = this.canvas.getBoundingClientRect();
     const xPos = (x - Math.round(rect.left)) * this.pixelRatio;
@@ -159,17 +192,10 @@ class MainChart extends Chart {
 
   drawDatesLine(dates, alpha) {
     this.ctx.save();
-
-    if (this.prevDates !== null) {
-      // console.log(alpha);
-    }
-
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.fillStyle = axisFontColor(alpha);
-
     let currentId = this.firstItemId - 1;
-
     this.coords[this.selectedCharts[0]].map((value, i) => {
       currentId++;
       if (!dates[currentId]) return;
@@ -210,7 +236,6 @@ class MainChart extends Chart {
     ctx.moveTo(x, y);
     ctx.arc(x, y, 8, 0, Math.PI * 2, false);
     ctx.stroke();
-
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.fillStyle = bgColorDay;
@@ -225,7 +250,6 @@ class MainChart extends Chart {
     ctx.beginPath();
     ctx.moveTo(x, chart.startY);
     ctx.lineTo(x, chart.endY);
-
     ctx.stroke();
   }
 
@@ -238,7 +262,7 @@ class MainChart extends Chart {
     this.tooltipInfo.className = "tooltip-info";
     this.tooltip.appendChild(this.tooltipDate);
     this.tooltip.appendChild(this.tooltipInfo);
-    this.tooltip.style = "display:none;";
+    this.tooltip.style.display = "none";
     this.container.appendChild(this.tooltip);
   }
 
@@ -249,20 +273,16 @@ class MainChart extends Chart {
         60 +
         ((this.hoverItem - 1 + this.startFraction) * this.spaceBetween) / this.pixelRatio
     );
-
     const date = new Date(this.data.columns.x[hoverItem]);
     const label = weekdays[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate();
     this.tooltipDate.innerHTML = label;
     this.tooltipInfo.innerHTML = "";
-
     this.selectedCharts.map(line => {
       const number = this.data.columns[line][hoverItem];
       const label = this.data.names[line];
       const color = this.data.colors[line];
       const infoDiv = document.createElement("div");
-      infoDiv.style = `
-      color: ${color};
-    `;
+      infoDiv.style.color = color;
       const numDiv = document.createElement("div");
       numDiv.className = "num";
       numDiv.innerHTML = number;
@@ -273,11 +293,12 @@ class MainChart extends Chart {
       infoDiv.appendChild(labelDiv);
       this.tooltipInfo.appendChild(infoDiv);
     });
-    this.tooltip.style = `display:block;left:${x}px;`;
+    this.tooltip.style.display = "block";
+    this.tooltip.style.left = `${x}px`;
   }
 
   hideTooltip() {
-    this.tooltip.style = "display:none";
+    this.tooltip.style.display = "none";
   }
 }
 

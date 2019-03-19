@@ -67,11 +67,19 @@ class NavChartControls extends Chart {
   }
 
   isHoverSlider(x) {
-    //  Outside of Slider
+    //  Outside of Chart
     if (this.mouse.y < 0 && this.mouse.y > this.startY) {
       if (this.mouse.hover) document.body.style.cursor = "auto";
       this.mouse.hover = null;
       return false;
+    }
+
+    // On Chart zone
+    if (x > 0 && x < this.startPos - 7 && x > this.endPos + this.barWidth + 10 && x < this.endX) {
+      console.log("outOfSlidebar");
+      this.mouse.hover = "outOfSlidebar";
+      document.body.style.cursor = "col-resize";
+      return true;
     }
 
     // StartBar
@@ -102,8 +110,11 @@ class NavChartControls extends Chart {
   }
 
   onMove = e => {
-    this.mouse.x = e.x - this.rect.left - this.chart.startX;
-    this.mouse.y = e.y + this.rect.top + this.endY - this.chart.startY;
+    e.preventDefault();
+    const x = e.touches ? e.touches[0].pageX : e.x;
+    const y = e.touches ? e.touches[0].pageY : e.y;
+    this.mouse.x = x - this.rect.left - this.chart.startX;
+    this.mouse.y = y + this.rect.top + this.endY - this.chart.startY;
     this.isHoverSlider(this.mouse.x);
 
     if (this.mouse.click) {
@@ -139,11 +150,16 @@ class NavChartControls extends Chart {
   };
 
   onDown = e => {
-    this.mouse.x = e.x - this.rect.left - this.chart.startX;
+    e.preventDefault();
+
+    const x = e.touches ? e.touches[0].pageX : e.x;
+    this.mouse.x = x - this.rect.left - this.chart.startX;
+
     this.isHoverSlider(this.mouse.x);
+    // console.log(this.mouse);
+    // console.log(this.startPos);
 
     if (this.mouse.hover) {
-      // alert("this");
       this.mouse.click = this.mouse.hover;
 
       if (this.mouse.hover === "centerBarPos")
@@ -151,7 +167,8 @@ class NavChartControls extends Chart {
     }
   };
 
-  onUp = () => {
+  onUp = e => {
+    e.preventDefault();
     this.mouse.click = false;
   };
 
@@ -159,6 +176,11 @@ class NavChartControls extends Chart {
     document.body.style.cursor = "auto";
     this.mouse.click = false;
     this.mouse.hover = false;
+  };
+
+  onScroll = e => {
+    console.log(e);
+    e.preventDefault();
   };
 }
 

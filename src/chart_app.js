@@ -115,6 +115,7 @@ function loadChartApp(options) {
   }
 
   setup();
+
   appContainer.appendChild(container);
 
   window.addEventListener("resize", onResize);
