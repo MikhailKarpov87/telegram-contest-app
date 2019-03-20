@@ -30,16 +30,3 @@ export function parseData(json, id) {
 
   return result;
 }
-
-export function findClosestItem(x, coords) {
-  return coords
-    .map(value => Math.abs(value.x - x))
-    .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
-}
-
-export function getYAxisMaxValue(max) {
-  const divider = Math.max(10, 10 ** (max.toString().length - 1));
-  const closestMax = Math.ceil(max / divider) * divider;
-  const maxValue = Math.max(closestMax, Math.round(max / divider) * divider);
-  return maxValue;
-}

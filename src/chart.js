@@ -1,3 +1,5 @@
+import { chartFontSize, colors } from "./constants";
+
 class Chart {
   constructor(options) {
     this.chart = {};
@@ -8,10 +10,19 @@ class Chart {
     this.lineWidth = 4;
     this.start = options.start;
     this.end = options.end;
+    this.diff = 0;
+    this.colors = colors.dayMode;
     this.range = (this.end - this.start).toFixed(5);
     this.selectedCharts = options.selectedCharts;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.container = options.container;
+    this.animate = {
+      animDates: 1,
+      animChart: 100,
+      animFadeChart: 100,
+      fadeInChart: null,
+      fadeOutChart: null
+    };
   }
 
   setup = () => {
@@ -35,7 +46,6 @@ class Chart {
     }
 
     this.ctx = this.canvas.getContext("2d");
-    this.ctx.translate(0.5, 0.5);
 
     this.container.appendChild(this.canvas);
     this.resize();
@@ -65,9 +75,16 @@ class Chart {
     this.update(this.start, this.end);
   };
 
-  updateSelectedCharts(selectedCharts) {
-    this.selectedCharts = selectedCharts;
-    this.update(this.start, this.end);
+  drawErrorMessage() {
+    this.ctx.save();
+    const fontSize = Math.round(chartFontSize * +this.pixelRatio) * 2;
+    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
+    this.ctx.fillStyle = this.colors.axisFontColor(1);
+    this.ctx.textAlign = "center";
+    const x = Math.round(this.chart.startX + this.chart.width / 2);
+    const y = Math.round(this.chart.height / 2);
+    this.ctx.fillText("No charts selected :(", x, y);
+    this.ctx.restore();
   }
 
   calcChartData(data, start, end) {
@@ -77,7 +94,7 @@ class Chart {
     this.startX = start > rangeToStart ? 0 : this.chart.startX - chart.startX * start;
     this.endX = end > 0.99 ? chart.endX : this.canvas.width;
 
-    //  Calculating data for first line
+    //  Calculating data for start line
     this.firstItemId = Math.floor(start * data.length);
     const initialItemFraction = 1 / data.length;
     this.startFraction = 1 - (start - initialItemFraction * this.firstItemId) / initialItemFraction;
@@ -85,7 +102,7 @@ class Chart {
     const secondValue = data[this.firstItemId + 1];
     const startValue = firstValue + (secondValue - firstValue) * (1 - this.startFraction);
 
-    // Calculating data for last line
+    // Calculating data for end line
     this.lastItemId = Math.ceil(end * data.length);
     const endFraction = 1 - (initialItemFraction * this.lastItemId - end) / initialItemFraction;
 
@@ -121,6 +138,14 @@ class Chart {
 
   drawChart(data, type, color) {
     const { chart } = this;
+    this.ctx.save();
+    if (type === this.animate.fadeOutChart) {
+      this.ctx.globalAlpha = (this.animate.animFadeChart / 100).toFixed(3);
+    }
+
+    if (type === this.animate.fadeInChart) {
+      this.ctx.globalAlpha = 1 - (this.animate.animFadeChart / 100).toFixed(3);
+    }
 
     this.ctx.beginPath();
     this.ctx.moveTo(chart.startX, chart.startY);
@@ -134,6 +159,62 @@ class Chart {
     this.ctx.strokeStyle = color;
     this.ctx.lineWidth = this.lineWidth;
     this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  updateSelectedCharts(checked, id) {
+    // console.log("UPDATED");
+    if (checked && !this.selectedCharts.includes(id)) {
+      this.animate.fadeInChart = id;
+    }
+    if (!checked && this.selectedCharts.includes(id)) {
+      this.animate.fadeOutChart = id;
+    }
+    this.animate.animFadeChart -= 5;
+
+    requestAnimationFrame(() => this.update(this.start, this.end));
+  }
+
+  getMaxValue(data, start, end) {
+    let selectedCharts = [...this.selectedCharts];
+
+    this.animate.fadeOutChart &&
+      selectedCharts.includes(this.animate.fadeOutChart) &&
+      selectedCharts.splice(selectedCharts.indexOf(this.animate.fadeOutChart), 1);
+
+    this.animate.fadeInChart &&
+      !selectedCharts.includes(this.animate.fadeInChart) &&
+      selectedCharts.push(this.animate.fadeInChart);
+    // console.log(selectedCharts);
+    return Math.max(
+      ...selectedCharts.map(line => Math.max(...data.columns[line].slice(start, end)))
+    );
+  }
+
+  findClosestItem(x, coords) {
+    return coords
+      .map(value => Math.abs(value.x - x))
+      .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
+  }
+
+  getYAxisMaxValue(max) {
+    const divider = Math.max(10, 10 ** (max.toString().length - 1));
+    const closestMax = Math.ceil(max / divider) * divider;
+    const maxValue = Math.max(closestMax, Math.round(max / divider) * divider);
+    return maxValue;
+  }
+
+  switchNightMode(nightmodeIsOn) {
+    this.colors = nightmodeIsOn ? colors.nightMode : colors.dayMode;
+
+    if (this.tooltip) {
+      this.tooltip.style.backgroundColor = this.colors.tooltipBgColor;
+      this.tooltip.style.color = this.colors.tooltipColor;
+      this.tooltip.style.mozBoxShadow = this.colors.tooltipShadow;
+      this.tooltip.style.webkitBoxShadow = this.colors.tooltipShadow;
+      this.tooltip.style.boxShadow = this.colors.tooltipShadow;
+    }
+    requestAnimationFrame(() => this.update(this.start, this.end));
   }
 
   onMove = () => {};

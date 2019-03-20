@@ -1,5 +1,4 @@
 import Chart from "./chart";
-import { navOverlayColor } from "./constants";
 
 class NavChartControls extends Chart {
   constructor(options) {
@@ -44,7 +43,7 @@ class NavChartControls extends Chart {
   }
 
   drawSlider(start, end) {
-    this.ctx.fillStyle = "rgba(193, 214, 229, 0.7)";
+    this.ctx.fillStyle = this.colors.sliderColor;
 
     //  Left Bar
     this.ctx.fillRect(start, 0, this.barWidth, this.startY);
@@ -58,7 +57,7 @@ class NavChartControls extends Chart {
   }
 
   drawBoundingArea(start, end) {
-    this.ctx.fillStyle = navOverlayColor;
+    this.ctx.fillStyle = this.colors.navOverlayColor;
     //  Left Area
     this.ctx.fillRect(this.startX - 1, 0, start - this.startX + 1, this.startY);
 

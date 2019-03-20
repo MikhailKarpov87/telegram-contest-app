@@ -6,8 +6,9 @@ function loadChartApp(options) {
   const { data, appContainer } = options;
   const title = options.title || "Chart";
   const lines = data.names;
-  const start = options.start || 0.6;
+  const start = options.start || 0.55;
   const end = options.end || 0.9;
+  let nightmodeIsOn = false;
 
   const container = document.createElement("div");
   container.name = title;
@@ -46,13 +47,10 @@ function loadChartApp(options) {
     const label = document.createElement("label");
     label.htmlFor = id;
     const span = document.createElement("span");
-    const ins = document.createElement("ins");
     const i = document.createElement("i");
     i.innerHTML = id;
-    ins.appendChild(i);
     label.appendChild(span);
     label.appendChild(text);
-    label.appendChild(ins);
     container.appendChild(checkbox);
     container.appendChild(label);
     selectedCharts.push(id);
@@ -60,6 +58,16 @@ function loadChartApp(options) {
   }
 
   container.appendChild(checkboxDiv);
+
+  //  Adding nightmode switch
+  const nightmodeDiv = document.createElement("div");
+  nightmodeDiv.className = "nightmode_switch";
+  const nightmodeButton = document.createElement("button");
+  nightmodeButton.className = "nightmode_button";
+  nightmodeButton.innerHTML = "Switch to Night Mode";
+  nightmodeButton.addEventListener("click", onNightmodeButtonClick);
+  nightmodeDiv.appendChild(nightmodeButton);
+  container.appendChild(nightmodeDiv);
 
   //    Creating instances of charts elements
   const mainChart = new MainChart({
@@ -108,13 +116,27 @@ function loadChartApp(options) {
 
   function onCheckboxChange(e) {
     const { checked, id } = e.target;
-    checked && !selectedCharts.includes(id) && selectedCharts.push(id);
-    !checked && selectedCharts.includes(id) && selectedCharts.splice(selectedCharts.indexOf(id), 1);
-    mainChart.updateSelectedCharts(selectedCharts);
-    navChart.updateSelectedCharts(selectedCharts);
+
+    mainChart.updateSelectedCharts(checked, id);
+    navChart.updateSelectedCharts(checked, id);
   }
 
   setup();
+
+  function onNightmodeButtonClick(e) {
+    e.preventDefault();
+    nightmodeIsOn = !nightmodeIsOn;
+    const buttonText = nightmodeIsOn ? "Switch to Day Mode" : "Switch to Night Mode";
+    const borderColor = nightmodeIsOn ? "#344658" : "#e6ecf0";
+    const bgColor = nightmodeIsOn ? "#242F3E" : "#FFFFFF";
+    const color = nightmodeIsOn ? "#FFFFFF" : "#222222";
+    nightmodeButton.innerHTML = buttonText;
+    document.body.style.backgroundColor = bgColor;
+    document.body.style.color = color;
+    checkboxDiv.style.borderColor = borderColor;
+    mainChart.switchNightMode(nightmodeIsOn);
+    navChartControls.switchNightMode(nightmodeIsOn);
+  }
 
   appContainer.appendChild(container);
 
