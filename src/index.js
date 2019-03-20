@@ -30,7 +30,7 @@ import loadChartApp from "./chart_app";
 
 //  loads JSON data(url, chart_id)
 window.addEventListener("DOMContentLoaded", () => {
-  loadData("http://192.168.1.116:3000/chart_data.json", 0).then(data => {
+  loadData("http://192.168.1.116:3000/chart_data.json", 4).then(data => {
     new loadChartApp({ title: "Chart1", data, appContainer: document.getElementById("app") });
   });
 });

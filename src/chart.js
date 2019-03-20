@@ -139,11 +139,11 @@ class Chart {
   drawChart(data, type, color) {
     const { chart } = this;
     this.ctx.save();
-    if (type === this.animate.fadeOutChart) {
+    if (type === this.animate.fadeOutChart && this.animate.animFadeChart) {
       this.ctx.globalAlpha = (this.animate.animFadeChart / 100).toFixed(3);
     }
 
-    if (type === this.animate.fadeInChart) {
+    if (type === this.animate.fadeInChart && this.animate.animFadeChart) {
       this.ctx.globalAlpha = 1 - (this.animate.animFadeChart / 100).toFixed(3);
     }
 
@@ -163,14 +163,20 @@ class Chart {
   }
 
   updateSelectedCharts(checked, id) {
-    // console.log("UPDATED");
+    this.animate.fadeInChart = null;
+    this.animate.fadeOutChart = null;
+    this.hoverItem = null;
+    console.log("CHECKBOX UPDATED: " + id + " = " + checked);
+    console.log(this.selectedCharts);
     if (checked && !this.selectedCharts.includes(id)) {
       this.animate.fadeInChart = id;
+      this.animate.animFadeChart -= 1;
+      this.selectedCharts.push(this.animate.fadeInChart);
     }
     if (!checked && this.selectedCharts.includes(id)) {
       this.animate.fadeOutChart = id;
+      this.animate.animFadeChart -= 1;
     }
-    this.animate.animFadeChart -= 5;
 
     requestAnimationFrame(() => this.update(this.start, this.end));
   }
@@ -185,16 +191,10 @@ class Chart {
     this.animate.fadeInChart &&
       !selectedCharts.includes(this.animate.fadeInChart) &&
       selectedCharts.push(this.animate.fadeInChart);
-    // console.log(selectedCharts);
+
     return Math.max(
       ...selectedCharts.map(line => Math.max(...data.columns[line].slice(start, end)))
     );
-  }
-
-  findClosestItem(x, coords) {
-    return coords
-      .map(value => Math.abs(value.x - x))
-      .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
   }
 
   getYAxisMaxValue(max) {
@@ -202,6 +202,12 @@ class Chart {
     const closestMax = Math.ceil(max / divider) * divider;
     const maxValue = Math.max(closestMax, Math.round(max / divider) * divider);
     return maxValue;
+  }
+
+  findClosestItem(x, coords) {
+    return coords
+      .map(value => Math.abs(value.x - x))
+      .reduce((min, x, i, arr) => (x < arr[min] ? i : min), 0);
   }
 
   switchNightMode(nightmodeIsOn) {

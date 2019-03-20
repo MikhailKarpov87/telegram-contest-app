@@ -17,8 +17,9 @@ class MainChart extends Chart {
   }
 
   update = (start, end) => {
+    // console.log(this);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    // console.log("update");
+
     const range = (end - start).toFixed(5);
     this.start = start;
     this.end = end;
@@ -31,13 +32,12 @@ class MainChart extends Chart {
       this.range = range;
     }
 
-    // console.log(this);
     //  Get charts data
     this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
     this.newMaxValueY = this.getYAxisMaxValue(this.maxNum);
     if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
 
-    //  Animating dates
+    //  Check for animating dates
     const datesNum = Object.keys(this.dates).length;
     if (datesNum !== Object.keys(this.newDates).length && !this.prevDates) {
       this.prevDates = this.dates;
@@ -46,6 +46,7 @@ class MainChart extends Chart {
 
     //  Animating charts
     if (Math.round(this.newMaxValueY) !== Math.round(this.maxValueY)) {
+      console.log("max value updated");
       if (this.animate.animChart === 100) {
         this.diff = this.newMaxValueY - this.maxValueY;
         this.startValue = this.maxValueY;
@@ -55,17 +56,13 @@ class MainChart extends Chart {
         this.startValue + (this.diff * (100 - this.animate.animChart)) / 100
       );
       requestAnimationFrame(() => this.update(this.start, this.end));
-      this.animate.animChart -= 3;
+      this.animate.animChart -= 4;
     }
     //  End animating charts
 
     //  Animating charts fade in/out
     if (this.animate.animFadeChart < 100) {
-      this.animate.animFadeChart -= 1;
-
-      this.animate.fadeInChart &&
-        !this.selectedCharts.includes(this.animate.fadeInChart) &&
-        this.selectedCharts.push(this.animate.fadeInChart);
+      this.animate.animFadeChart -= 4;
 
       if (this.animate.animFadeChart <= 0) {
         this.animate.fadeOutChart &&
@@ -85,15 +82,15 @@ class MainChart extends Chart {
 
     //  Start drawing from Y and X Axis
 
+    this.drawMainAxis();
+
     // error
     if (!this.selectedCharts.length) {
       this.hideTooltip();
-      this.drawMainAxis();
       this.drawErrorMessage();
       return;
     }
 
-    this.drawMainAxis();
     this.drawYAxis();
 
     //  Start drawing charts and hover grid/points
@@ -186,6 +183,8 @@ class MainChart extends Chart {
       currentId++;
       if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
+      //  For output dates only in chart zone
+      // if (x < this.startX - 35) return;
       this.ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
     this.ctx.restore();
