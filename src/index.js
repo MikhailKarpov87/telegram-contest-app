@@ -1,6 +1,22 @@
-import { loadData } from "./helpers";
-import loadChartApp from "./chart_app";
+import createChartApp from "./chart_app";
+const url = "./chart_data.json";
+const id = 4;
 
+//  loads JSON data(url, chart_id)
+window.addEventListener("DOMContentLoaded", () => {
+  let data;
+  const req = new XMLHttpRequest();
+  req.overrideMimeType("application/json");
+  req.open("GET", url, true);
+  req.onload = function() {
+    const jsonResponse = JSON.parse(req.responseText);
+    data = parseData(jsonResponse, id);
+    new createChartApp({ title: "Chart1", data, appContainer: document.getElementById("app") });
+  };
+  req.send();
+});
+
+//  requestAnimationFrame polyfill for stable work
 (function() {
   var lastTime = 0;
   var vendors = ["ms", "moz", "webkit", "o"];
@@ -28,9 +44,16 @@ import loadChartApp from "./chart_app";
     };
 })();
 
-//  loads JSON data(url, chart_id)
-window.addEventListener("DOMContentLoaded", () => {
-  loadData("http://192.168.1.116:3000/chart_data.json", 4).then(data => {
-    new loadChartApp({ title: "Chart1", data, appContainer: document.getElementById("app") });
-  });
-});
+//  Parsing data function
+function parseData(json, id) {
+  const data = json[id];
+  let result = { ...data, columns: {} };
+
+  for (let item of data.columns) {
+    const name = item[0];
+    item.shift();
+    result.columns[name] = item;
+  }
+
+  return result;
+}

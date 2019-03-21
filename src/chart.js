@@ -13,10 +13,10 @@ class Chart {
     this.diff = 0;
     this.colors = colors.dayMode;
     this.range = (this.end - this.start).toFixed(5);
-    this.selectedCharts = options.selectedCharts;
+    this.sCharts = options.selectedCharts;
     this.pixelRatio = window.devicePixelRatio || 1;
     this.container = options.container;
-    this.animate = {
+    this.an = {
       animDates: 1,
       animChart: 100,
       animFadeChart: 100,
@@ -74,6 +74,46 @@ class Chart {
     this.chart.height = this.chart.startY - this.chart.endY;
     this.update(this.start, this.end);
   };
+
+  makeAnimations() {
+    //  Get charts data
+    this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
+    this.newMaxValueY = this.getYAxisMaxValue(this.maxNum);
+    if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
+
+    //  Animating charts
+    if (Math.round(this.newMaxValueY) !== Math.round(this.maxValueY)) {
+      if (this.an.animChart === 100) {
+        this.diff = this.newMaxValueY - this.maxValueY;
+        this.startValue = this.maxValueY;
+      }
+
+      this.maxValueY = Math.round(this.startValue + (this.diff * (100 - this.an.animChart)) / 100);
+      requestAnimationFrame(() => this.update(this.start, this.end));
+      this.an.animChart -= 4;
+    }
+    //  End animating charts
+
+    //  Animating charts fade in/out
+    if (this.an.animFadeChart < 100) {
+      this.an.animFadeChart -= 4;
+
+      if (this.an.animFadeChart <= 0) {
+        this.an.fadeOutChart &&
+          this.sCharts.includes(this.an.fadeOutChart) &&
+          this.sCharts.splice(this.sCharts.indexOf(this.an.fadeOutChart), 1);
+
+        this.an.animFadeChart = 100;
+        this.an.fadeInChart = null;
+        this.an.fadeOutChart = null;
+      }
+    }
+
+    if (this.an.animChart <= 0) {
+      this.an.animChart = 100;
+      this.maxValueY = this.newMaxValueY;
+    }
+  }
 
   drawErrorMessage() {
     this.ctx.save();
@@ -139,12 +179,12 @@ class Chart {
   drawChart(data, type, color) {
     const { chart } = this;
     this.ctx.save();
-    if (type === this.animate.fadeOutChart && this.animate.animFadeChart) {
-      this.ctx.globalAlpha = (this.animate.animFadeChart / 100).toFixed(3);
+    if (type === this.an.fadeOutChart && this.an.animFadeChart) {
+      this.ctx.globalAlpha = (this.an.animFadeChart / 100).toFixed(3);
     }
 
-    if (type === this.animate.fadeInChart && this.animate.animFadeChart) {
-      this.ctx.globalAlpha = 1 - (this.animate.animFadeChart / 100).toFixed(3);
+    if (type === this.an.fadeInChart && this.an.animFadeChart) {
+      this.ctx.globalAlpha = 1 - (this.an.animFadeChart / 100).toFixed(3);
     }
 
     this.ctx.beginPath();
@@ -163,34 +203,32 @@ class Chart {
   }
 
   updateSelectedCharts(checked, id) {
-    this.animate.fadeInChart = null;
-    this.animate.fadeOutChart = null;
+    this.an.fadeInChart = null;
+    this.an.fadeOutChart = null;
     this.hoverItem = null;
-    console.log("CHECKBOX UPDATED: " + id + " = " + checked);
-    console.log(this.selectedCharts);
-    if (checked && !this.selectedCharts.includes(id)) {
-      this.animate.fadeInChart = id;
-      this.animate.animFadeChart -= 1;
-      this.selectedCharts.push(this.animate.fadeInChart);
+    if (checked && !this.sCharts.includes(id)) {
+      this.an.fadeInChart = id;
+      this.an.animFadeChart -= 1;
+      this.sCharts.push(this.an.fadeInChart);
     }
-    if (!checked && this.selectedCharts.includes(id)) {
-      this.animate.fadeOutChart = id;
-      this.animate.animFadeChart -= 1;
+    if (!checked && this.sCharts.includes(id)) {
+      this.an.fadeOutChart = id;
+      this.an.animFadeChart -= 1;
     }
 
     requestAnimationFrame(() => this.update(this.start, this.end));
   }
 
   getMaxValue(data, start, end) {
-    let selectedCharts = [...this.selectedCharts];
+    let selectedCharts = [...this.sCharts];
 
-    this.animate.fadeOutChart &&
-      selectedCharts.includes(this.animate.fadeOutChart) &&
-      selectedCharts.splice(selectedCharts.indexOf(this.animate.fadeOutChart), 1);
+    this.an.fadeOutChart &&
+      selectedCharts.includes(this.an.fadeOutChart) &&
+      selectedCharts.splice(selectedCharts.indexOf(this.an.fadeOutChart), 1);
 
-    this.animate.fadeInChart &&
-      !selectedCharts.includes(this.animate.fadeInChart) &&
-      selectedCharts.push(this.animate.fadeInChart);
+    this.an.fadeInChart &&
+      !selectedCharts.includes(this.an.fadeInChart) &&
+      selectedCharts.push(this.an.fadeInChart);
 
     return Math.max(
       ...selectedCharts.map(line => Math.max(...data.columns[line].slice(start, end)))

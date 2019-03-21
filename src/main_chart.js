@@ -17,7 +17,6 @@ class MainChart extends Chart {
   }
 
   update = (start, end) => {
-    // console.log(this);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     const range = (end - start).toFixed(5);
@@ -32,11 +31,6 @@ class MainChart extends Chart {
       this.range = range;
     }
 
-    //  Get charts data
-    this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
-    this.newMaxValueY = this.getYAxisMaxValue(this.maxNum);
-    if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
-
     //  Check for animating dates
     const datesNum = Object.keys(this.dates).length;
     if (datesNum !== Object.keys(this.newDates).length && !this.prevDates) {
@@ -44,48 +38,14 @@ class MainChart extends Chart {
       this.dates = this.newDates;
     }
 
-    //  Animating charts
-    if (Math.round(this.newMaxValueY) !== Math.round(this.maxValueY)) {
-      console.log("max value updated");
-      if (this.animate.animChart === 100) {
-        this.diff = this.newMaxValueY - this.maxValueY;
-        this.startValue = this.maxValueY;
-      }
-
-      this.maxValueY = Math.round(
-        this.startValue + (this.diff * (100 - this.animate.animChart)) / 100
-      );
-      requestAnimationFrame(() => this.update(this.start, this.end));
-      this.animate.animChart -= 4;
-    }
-    //  End animating charts
-
-    //  Animating charts fade in/out
-    if (this.animate.animFadeChart < 100) {
-      this.animate.animFadeChart -= 4;
-
-      if (this.animate.animFadeChart <= 0) {
-        this.animate.fadeOutChart &&
-          this.selectedCharts.includes(this.animate.fadeOutChart) &&
-          this.selectedCharts.splice(this.selectedCharts.indexOf(this.animate.fadeOutChart), 1);
-
-        this.animate.animFadeChart = 100;
-        this.animate.fadeInChart = null;
-        this.animate.fadeOutChart = null;
-      }
-    }
-
-    if (this.animate.animChart <= 0) {
-      this.animate.animChart = 100;
-      this.maxValueY = this.newMaxValueY;
-    }
+    this.makeAnimations();
 
     //  Start drawing from Y and X Axis
 
     this.drawMainAxis();
 
     // error
-    if (!this.selectedCharts.length) {
+    if (!this.sCharts.length) {
       this.hideTooltip();
       this.drawErrorMessage();
       return;
@@ -94,11 +54,9 @@ class MainChart extends Chart {
     this.drawYAxis();
 
     //  Start drawing charts and hover grid/points
-    this.selectedCharts.map(line => {
+    this.sCharts.map(line => {
       this.coords[line] = this.calcChartData(this.data.columns[line], start, end);
-
       this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
-
       this.drawChart(this.coords[line], line, this.data.colors[line]);
 
       if (this.hoverItem !== null) {
@@ -119,23 +77,23 @@ class MainChart extends Chart {
         Object.keys(this.prevDates).length > Object.keys(this.dates).length ? "fadeOut" : "fadeIn";
       if (this.animation === "fadeOut") {
         this.drawDatesLine(this.dates, 1);
-        this.drawDatesLine(this.prevDates, this.animate.animDates);
+        this.drawDatesLine(this.prevDates, this.an.animDates);
       }
       if (this.animation === "fadeIn") {
-        this.drawDatesLine(this.dates, 1 - this.animate.animDates);
+        this.drawDatesLine(this.dates, 1 - this.an.animDates);
         this.drawDatesLine(this.prevDates, 1);
       }
-      this.animate.animDates = (this.animate.animDates - 0.02).toFixed(3);
+      this.an.animDates = (this.an.animDates - 0.02).toFixed(3);
       requestAnimationFrame(() => this.update(this.start, this.end));
 
-      if (this.animate.animDates <= 0) {
-        this.animate.animDates = 1;
+      if (this.an.animDates <= 0) {
+        this.an.animDates = 1;
         this.prevDates = null;
         this.animation = null;
       }
     }
-    // console.log("main:" + this.animate.animFadeChart);
-    if (this.animate.animFadeChart < 100 || this.animate.animChart < 100) {
+
+    if (this.an.animFadeChart < 100 || this.an.animChart < 100) {
       requestAnimationFrame(() => this.update(this.start, this.end));
     }
     //  End of dates animation
@@ -152,13 +110,13 @@ class MainChart extends Chart {
     const yPos = (y - Math.round(rect.top)) * this.pixelRatio;
 
     if (
-      this.selectedCharts.length &&
+      this.sCharts.length &&
       yPos < chart.startY &&
       yPos > chart.endY &&
       xPos > chart.startX &&
       xPos < chart.endX
     ) {
-      this.hoverItem = this.findClosestItem(xPos, this.coords[this.selectedCharts[0]]);
+      this.hoverItem = this.findClosestItem(xPos, this.coords[this.sCharts[0]]);
 
       requestAnimationFrame(() => this.update(this.start, this.end));
     }
@@ -179,7 +137,7 @@ class MainChart extends Chart {
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.fillStyle = this.colors.axisFontColor(alpha);
     let currentId = this.firstItemId - 1;
-    this.coords[this.selectedCharts[0]].map((value, i) => {
+    this.coords[this.sCharts[0]].map((value, i) => {
       currentId++;
       if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
@@ -267,7 +225,7 @@ class MainChart extends Chart {
     const label = weekdays[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate();
     this.tooltipDate.innerHTML = label;
     this.tooltipInfo.innerHTML = "";
-    this.selectedCharts.map(line => {
+    this.sCharts.map(line => {
       const number = this.data.columns[line][hoverItem];
       const label = this.data.names[line];
       const color = this.data.colors[line];

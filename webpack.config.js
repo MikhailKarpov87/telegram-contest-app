@@ -3,7 +3,26 @@ const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
   optimization: {
-    minimizer: [new UglifyJsPlugin()]
+    minimizer: [
+      new UglifyJsPlugin({
+        uglifyOptions: {
+          warnings: false,
+          parse: {},
+          compress: {},
+          mangle: {
+            properties: true,
+            toplevel: false,
+            reserved: ["addEventListener", "window"],
+            keep_fnames: true
+          },
+          output: null,
+          toplevel: false,
+          nameCache: null,
+          ie8: false,
+          keep_fnames: false
+        }
+      })
+    ]
   },
   module: {
     rules: [

@@ -2,7 +2,7 @@ import MainChart from "./main_chart";
 import NavChart from "./nav_chart";
 import NavChartControls from "./nav_chart_controls";
 
-function loadChartApp(options) {
+function createChartApp(options) {
   const { data, appContainer } = options;
   const title = options.title || "Chart";
   const lines = data.names;
@@ -10,16 +10,16 @@ function loadChartApp(options) {
   const end = options.end || 0.9;
   let nightmodeIsOn = false;
 
-  const container = document.createElement("div");
+  const container = dce("div");
   container.name = title;
 
-  const appTitle = document.createElement("h2");
+  const appTitle = dce("h2");
   appTitle.innerHTML = title;
 
-  const mainChartContainer = document.createElement("div");
+  const mainChartContainer = dce("div");
   mainChartContainer.id = "main_chart_container";
 
-  const navChartContainer = document.createElement("div");
+  const navChartContainer = dce("div");
   navChartContainer.id = "nav_chart_container";
 
   container.appendChild(appTitle);
@@ -27,7 +27,7 @@ function loadChartApp(options) {
   container.appendChild(navChartContainer);
 
   //  Adding checkboxes
-  const checkboxDiv = document.createElement("div");
+  const checkboxDiv = dce("div");
   checkboxDiv.id = "controls";
   let selectedCharts = [];
 
@@ -37,17 +37,17 @@ function loadChartApp(options) {
   }
 
   function createCheckbox(id) {
-    const container = document.createElement("div");
-    const checkbox = document.createElement("input");
+    const container = dce("div");
+    const checkbox = dce("input");
     checkbox.addEventListener("change", onCheckboxChange);
     checkbox.type = "checkbox";
     checkbox.id = id;
     checkbox.checked = "true";
     const text = document.createTextNode(id);
-    const label = document.createElement("label");
+    const label = dce("label");
     label.htmlFor = id;
-    const span = document.createElement("span");
-    const i = document.createElement("i");
+    const span = dce("span");
+    const i = dce("i");
     i.innerHTML = id;
     label.appendChild(span);
     label.appendChild(text);
@@ -60,9 +60,9 @@ function loadChartApp(options) {
   container.appendChild(checkboxDiv);
 
   //  Adding nightmode switch
-  const nightmodeDiv = document.createElement("div");
+  const nightmodeDiv = dce("div");
   nightmodeDiv.className = "nightmode_switch";
-  const nightmodeButton = document.createElement("button");
+  const nightmodeButton = dce("button");
   nightmodeButton.className = "nightmode_button";
   nightmodeButton.innerHTML = "Switch to Night Mode";
   nightmodeButton.addEventListener("click", onNightmodeButtonClick);
@@ -143,4 +143,6 @@ function loadChartApp(options) {
   window.addEventListener("resize", onResize);
 }
 
-export default loadChartApp;
+const dce = elem => document.createElement(elem);
+
+export default createChartApp;

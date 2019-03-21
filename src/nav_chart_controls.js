@@ -75,7 +75,6 @@ class NavChartControls extends Chart {
 
     // On Chart zone
     if (x > 0 && x < this.startPos - 7 && x > this.endPos + this.barWidth + 10 && x < this.endX) {
-      console.log("outOfSlidebar");
       this.mouse.hover = "outOfSlidebar";
       document.body.style.cursor = "col-resize";
       return true;
@@ -155,8 +154,6 @@ class NavChartControls extends Chart {
     this.mouse.x = x - this.rect.left - this.chart.startX;
 
     this.isHoverSlider(this.mouse.x);
-    // console.log(this.mouse);
-    // console.log(this.startPos);
 
     if (this.mouse.hover) {
       this.mouse.click = this.mouse.hover;
@@ -178,7 +175,6 @@ class NavChartControls extends Chart {
   };
 
   onScroll = e => {
-    console.log(e);
     e.preventDefault();
   };
 }
