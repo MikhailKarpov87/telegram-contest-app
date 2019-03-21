@@ -100,12 +100,13 @@ class MainChart extends Chart {
 
     if (this.an.animFadeChart < 100 || this.an.animChart < 100) {
       setTimeout(requestAnimationFrame(() => this.update(this.start, this.end)), 16);
+      // requestAnimationFrame(() => this.update(this.start, this.end));
     }
     //  End of dates animation
   };
 
   onMove = e => {
-    e.preventDefault();
+    // e.preventDefault();
     const x = e.touches ? e.touches[0].pageX : e.x;
     const y = e.touches ? e.touches[0].pageY : e.y;
 
@@ -139,7 +140,7 @@ class MainChart extends Chart {
   drawDatesLine(dates, alpha) {
     this.ctx.save();
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
-    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
+    this.ctx.font = `300 ${fontSize}px ${this.colors.axisFontsList}`;
     this.ctx.fillStyle = this.colors.axisFontColor(alpha);
     let currentId = this.firstItemId - 1;
     this.coords[this.sCharts[0]].map((value, i) => {
@@ -157,7 +158,7 @@ class MainChart extends Chart {
     let startY, maxValueY, alpha;
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.lineWidth = 1;
-    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
+    this.ctx.font = `300 ${fontSize}px ${this.colors.axisFontsList}`;
     this.ctx.strokeStyle = this.colors.axisLinesColor;
 
     if (this.an.animChart < 100) {

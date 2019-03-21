@@ -1,6 +1,6 @@
 import createChartApp from "./chart_app";
 const url = "./chart_data.json";
-const id = 4;
+const id = 0;
 
 //  loads JSON data(url, chart_id)
 window.addEventListener("DOMContentLoaded", () => {

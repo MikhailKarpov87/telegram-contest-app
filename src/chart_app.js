@@ -60,6 +60,11 @@ function createChartApp(options) {
 
   container.appendChild(checkboxDiv);
 
+  //  spacer for margin to nightmode switch
+  const spacerDiv = dce("div");
+  spacerDiv.className = "spacer";
+  container.appendChild(spacerDiv);
+
   //  Adding nightmode switch
   const nightmodeDiv = dce("div");
   nightmodeDiv.className = "nightmode_switch";

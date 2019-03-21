@@ -1,8 +1,12 @@
 // export const axisFontColor = "#96A2AA";
 
+const axisFontsList = `-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial,
+    sans-serif`;
+
 export const colors = {
   dayMode: {
     axisFontColor: opacity => `rgba(150, 162, 170, ${opacity})`,
+    axisFontsList,
     axisLinesColor: "#ECF0F3",
     hoverLineColor: "#DFE6EB",
     bgColor: "#FFFFFF",
@@ -14,6 +18,7 @@ export const colors = {
   },
   nightMode: {
     axisFontColor: opacity => `rgba(84, 103, 120, ${opacity})`,
+    axisFontsList,
     axisLinesColor: "#303e4f",
     hoverLineColor: "#3b4a5a",
     bgColor: "#242F3E",

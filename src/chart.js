@@ -57,9 +57,14 @@ class Chart {
     const { innerWidth, innerHeight } = window;
 
     const width = Math.round(1.0 * innerWidth);
-    const height = Math.round(
-      1.0 * (innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio
-    );
+    let height = Math.round(1.0 * (innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio);
+    // alert(height);
+
+    //  Min height for main_chart and nav_chart
+    if (this.canvas.id === "main_chart" && height < 200)
+      height = Math.round(0.9 * innerHeight * this.ratio);
+    if (this.canvas.id !== "main_chart" && height < 80)
+      height = Math.round(0.9 * innerHeight * this.ratio);
 
     this.container.style.width = width + "px";
     this.container.style.height = height + "px";
@@ -69,16 +74,10 @@ class Chart {
 
     this.chart.startX = Math.round(0.05 * this.canvas.width);
     this.chart.endX = Math.round(0.95 * this.canvas.width);
-    this.chart.endY = Math.round(0.12 * this.canvas.height);
-    this.chart.startY = Math.round(0.85 * this.canvas.height);
+    this.chart.endY = Math.round(0.13 * this.canvas.height);
+    this.chart.startY = Math.round(0.83 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-    if ((this.canvas.id = "main_chart")) {
-      // console.log("RESIZE:");
-      // console.log(innerWidth + "|" + innerHeight);
-      // console.log(width + "|" + height);
-      // console.log(this.canvas.width + "|" + this.canvas.height);
-    }
     this.update(this.start, this.end);
   };
 
@@ -126,7 +125,7 @@ class Chart {
   drawErrorMessage() {
     this.ctx.save();
     const fontSize = Math.round(chartFontSize * +this.pixelRatio) * 2;
-    this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
+    this.ctx.font = `300 ${fontSize}px ${this.colors.axisFontsList}`;
     this.ctx.fillStyle = this.colors.axisFontColor(1);
     this.ctx.textAlign = "center";
     const x = Math.round(this.chart.startX + this.chart.width / 2);
@@ -141,9 +140,11 @@ class Chart {
     const rangeToStart = this.spaceBetween / this.chart.width;
     // startX = start > rangeToStart ? 0 : chart.startX * start;
     // kinda working:
-    this.startX =
-      start > rangeToStart ? 0 : this.chart.startX - (chart.width + this.chart.startX) * start;
-    this.endX = end > 0.99 ? chart.endX : this.canvas.width;
+    // this.startX =
+    //   start > rangeToStart ? 0 : this.chart.startX - (chart.width + this.chart.startX) * start;
+    // this.endX = end > 0.99 ? chart.endX : this.canvas.width;
+    this.startX = this.chart.startX;
+    this.endX = this.chart.endX;
 
     //  Calculating data for start line
     this.firstItemId = Math.floor(start * data.length);
