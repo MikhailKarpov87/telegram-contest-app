@@ -10,7 +10,7 @@ module.exports = {
           parse: {},
           compress: {},
           mangle: {
-            properties: true,
+            properties: false,
             toplevel: false,
             reserved: ["addEventListener", "window"],
             keep_fnames: true

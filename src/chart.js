@@ -25,7 +25,7 @@ class Chart {
     };
   }
 
-  setup = () => {
+  setup = controlsDiv => {
     this.canvas = document.createElement("canvas");
 
     this.canvas.id = this.name;
@@ -48,17 +48,18 @@ class Chart {
     this.ctx = this.canvas.getContext("2d");
 
     this.container.appendChild(this.canvas);
+    this.controlsDiv = controlsDiv;
     this.resize();
   };
 
   resize = () => {
+    // console.log(this.controlsDiv.clientHeight);
     const { innerWidth, innerHeight } = window;
 
-    const width =
-      innerHeight < innerWidth ? Math.round(1.0 * innerWidth) : Math.round(1.0 * innerHeight);
-    const windowHeight =
-      innerHeight < innerWidth ? Math.round(1.0 * innerHeight) : Math.round(1.0 * innerWidth);
-    const height = Math.round(this.ratio * windowHeight);
+    const width = Math.round(1.0 * innerWidth);
+    const height = Math.round(
+      1.0 * (innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio
+    );
 
     this.container.style.width = width + "px";
     this.container.style.height = height + "px";
@@ -68,14 +69,20 @@ class Chart {
 
     this.chart.startX = Math.round(0.05 * this.canvas.width);
     this.chart.endX = Math.round(0.95 * this.canvas.width);
-    this.chart.endY = Math.round(0.1 * this.canvas.height);
+    this.chart.endY = Math.round(0.12 * this.canvas.height);
     this.chart.startY = Math.round(0.85 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
+    if ((this.canvas.id = "main_chart")) {
+      // console.log("RESIZE:");
+      // console.log(innerWidth + "|" + innerHeight);
+      // console.log(width + "|" + height);
+      // console.log(this.canvas.width + "|" + this.canvas.height);
+    }
     this.update(this.start, this.end);
   };
 
-  makeAnimations() {
+  calcAnimations() {
     //  Get charts data
     this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
     this.newMaxValueY = this.getYAxisMaxValue(this.maxNum);
@@ -86,17 +93,18 @@ class Chart {
       if (this.an.animChart === 100) {
         this.diff = this.newMaxValueY - this.maxValueY;
         this.startValue = this.maxValueY;
+        this.prevAxisValue = this.maxValueY;
+        this.newAxisValue = this.newMaxValueY;
       }
 
       this.maxValueY = Math.round(this.startValue + (this.diff * (100 - this.an.animChart)) / 100);
-      requestAnimationFrame(() => this.update(this.start, this.end));
-      this.an.animChart -= 4;
+      this.an.animChart -= 5;
     }
     //  End animating charts
 
     //  Animating charts fade in/out
     if (this.an.animFadeChart < 100) {
-      this.an.animFadeChart -= 4;
+      this.an.animFadeChart -= 5;
 
       if (this.an.animFadeChart <= 0) {
         this.an.fadeOutChart &&
@@ -131,7 +139,10 @@ class Chart {
     const { chart } = this;
     let result = [];
     const rangeToStart = this.spaceBetween / this.chart.width;
-    this.startX = start > rangeToStart ? 0 : this.chart.startX - chart.startX * start;
+    // startX = start > rangeToStart ? 0 : chart.startX * start;
+    // kinda working:
+    this.startX =
+      start > rangeToStart ? 0 : this.chart.startX - (chart.width + this.chart.startX) * start;
     this.endX = end > 0.99 ? chart.endX : this.canvas.width;
 
     //  Calculating data for start line

@@ -12,7 +12,7 @@ class NavChart extends Chart {
   update = () => {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.makeAnimations();
+    this.calcAnimations();
 
     this.sCharts.map(line => {
       this.coords = this.calcChartData(this.data.columns[line], this.start, this.end);

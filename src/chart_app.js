@@ -43,10 +43,11 @@ function createChartApp(options) {
     checkbox.type = "checkbox";
     checkbox.id = id;
     checkbox.checked = "true";
-    const text = document.createTextNode(id);
+    const text = document.createTextNode(data.names[id]);
     const label = dce("label");
     label.htmlFor = id;
     const span = dce("span");
+    span.style.borderColor = data.colors[id];
     const i = dce("i");
     i.innerHTML = id;
     label.appendChild(span);
@@ -78,7 +79,7 @@ function createChartApp(options) {
     start,
     end,
     selectedCharts,
-    ratio: 0.5
+    ratio: 0.65
   });
 
   const navChart = new NavChart({
@@ -87,7 +88,7 @@ function createChartApp(options) {
     appContainer: container,
     data,
     selectedCharts,
-    ratio: 0.15
+    ratio: 0.13
   });
 
   const navChartControls = new NavChartControls({
@@ -98,14 +99,14 @@ function createChartApp(options) {
     selectedCharts,
     start,
     end,
-    ratio: 0.15,
+    ratio: 0.13,
     controlledChart: mainChart
   });
 
   function setup() {
-    mainChart.setup();
-    navChart.setup();
-    navChartControls.setup();
+    mainChart.setup(checkboxDiv);
+    navChart.setup(checkboxDiv);
+    navChartControls.setup(checkboxDiv);
   }
 
   function onResize() {
@@ -120,8 +121,6 @@ function createChartApp(options) {
     mainChart.updateSelectedCharts(checked, id);
     navChart.updateSelectedCharts(checked, id);
   }
-
-  setup();
 
   function onNightmodeButtonClick(e) {
     e.preventDefault();
@@ -139,6 +138,8 @@ function createChartApp(options) {
   }
 
   appContainer.appendChild(container);
+
+  setup();
 
   window.addEventListener("resize", onResize);
 }

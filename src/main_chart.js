@@ -38,7 +38,7 @@ class MainChart extends Chart {
       this.dates = this.newDates;
     }
 
-    this.makeAnimations();
+    this.calcAnimations();
 
     //  Start drawing from Y and X Axis
 
@@ -51,7 +51,12 @@ class MainChart extends Chart {
       return;
     }
 
-    this.drawYAxis();
+    if (this.an.animChart < 100) {
+      this.drawYAxis("fadeOut");
+      this.drawYAxis("fadeIn");
+    } else {
+      this.drawYAxis();
+    }
 
     //  Start drawing charts and hover grid/points
     this.sCharts.map(line => {
@@ -94,7 +99,7 @@ class MainChart extends Chart {
     }
 
     if (this.an.animFadeChart < 100 || this.an.animChart < 100) {
-      requestAnimationFrame(() => this.update(this.start, this.end));
+      setTimeout(requestAnimationFrame(() => this.update(this.start, this.end)), 16);
     }
     //  End of dates animation
   };
@@ -148,17 +153,38 @@ class MainChart extends Chart {
     this.ctx.restore();
   }
 
-  drawYAxis() {
-    const alpha = 1;
+  drawYAxis(anim) {
+    let startY, maxValueY, alpha;
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
     this.ctx.lineWidth = 1;
     this.ctx.font = `300 ${fontSize}px BlinkMacSystemFont`;
     this.ctx.strokeStyle = this.colors.axisLinesColor;
+
+    if (this.an.animChart < 100) {
+      const direction = this.newMaxValueY > this.maxValueY ? 1 : -1;
+      if (anim === "fadeOut") {
+        startY =
+          this.chart.startY + direction * (1 - this.an.animChart / 100) * this.chart.height * 0.5;
+        maxValueY = this.prevAxisValue;
+        alpha = this.an.animChart / 100;
+      }
+      if (anim === "fadeIn") {
+        startY =
+          this.chart.startY - direction * (this.an.animChart / 100) * this.chart.height * 0.5;
+        alpha = 1 - this.an.animChart / 100;
+        maxValueY = this.newAxisValue;
+      }
+    } else {
+      startY = this.chart.startY;
+      maxValueY = this.maxValueY;
+      alpha = 1;
+    }
+
     this.ctx.fillStyle = this.colors.axisFontColor(alpha);
 
     for (let i = 1; i <= 5; i++) {
-      const height = this.chart.startY - (i * this.chart.height) / 5;
-      const currentValue = (this.maxValueY * i) / 5;
+      const height = startY - (i * this.chart.height) / 5;
+      const currentValue = (maxValueY * i) / 5;
       this.ctx.fillText(currentValue, this.chart.startX, height - 0.5 * fontSize);
       this.ctx.beginPath();
       this.ctx.moveTo(this.chart.startX, height);
