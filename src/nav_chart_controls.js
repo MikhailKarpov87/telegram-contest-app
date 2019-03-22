@@ -173,10 +173,6 @@ class NavChartControls extends Chart {
     this.mouse.click = false;
     this.mouse.hover = false;
   };
-
-  onScroll = e => {
-    e.preventDefault();
-  };
 }
 
 export default NavChartControls;

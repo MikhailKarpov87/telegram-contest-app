@@ -27,13 +27,11 @@ class Chart {
 
   setup = controlsDiv => {
     this.canvas = document.createElement("canvas");
-
     this.canvas.id = this.name;
     this.canvas.addEventListener("mousemove", this.onMove);
     this.canvas.addEventListener("touchmove", this.onMove);
 
     if ((this.name = "nav_chart_controls")) {
-      this.canvas.addEventListener("scroll", this.onScroll);
       this.canvas.addEventListener("mousedown", this.onDown);
       this.canvas.addEventListener("touchstart", this.onDown);
       this.canvas.addEventListener("mouseup", this.onUp);
@@ -41,35 +39,28 @@ class Chart {
       this.canvas.addEventListener("mouseleave", this.onLeave);
     }
 
-    if ((this.name = "main_chart")) {
-      this.canvas.addEventListener("mouseleave", this.onLeave);
-    }
-
     this.ctx = this.canvas.getContext("2d");
-
     this.container.appendChild(this.canvas);
     this.controlsDiv = controlsDiv;
     this.resize();
   };
 
   resize = () => {
-    // console.log(this.controlsDiv.clientHeight);
     const { innerWidth, innerHeight } = window;
 
-    const width = Math.round(1.0 * innerWidth);
-    let height = Math.round(1.0 * (innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio);
-    // alert(height);
+    //  Setting height based on viewport and height of controls elements
+    let height = Math.round((innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio);
 
-    //  Min height for main_chart and nav_chart
+    //  Settings min height for main_chart and nav_chart
     if (this.canvas.id === "main_chart" && height < 200)
       height = Math.round(0.9 * innerHeight * this.ratio);
     if (this.canvas.id !== "main_chart" && height < 80)
       height = Math.round(0.9 * innerHeight * this.ratio);
 
-    this.container.style.width = width + "px";
+    this.container.style.width = innerWidth + "px";
     this.container.style.height = height + "px";
 
-    this.canvas.width = width * this.pixelRatio;
+    this.canvas.width = innerWidth * this.pixelRatio;
     this.canvas.height = height * this.pixelRatio;
 
     this.chart.startX = Math.round(0.05 * this.canvas.width);
@@ -78,12 +69,12 @@ class Chart {
     this.chart.startY = Math.round(0.83 * this.canvas.height);
     this.chart.width = this.chart.endX - this.chart.startX;
     this.chart.height = this.chart.startY - this.chart.endY;
-    this.update(this.start, this.end);
+    requestAnimationFrame(() => this.update(this.start, this.end));
   };
 
   calcAnimations() {
     //  Get charts data
-    this.maxNum = this.getMaxValue(this.data, this.firstItemId, this.lastItemId);
+    this.maxNum = this.getMaxValue();
     this.newMaxValueY = this.getYAxisMaxValue(this.maxNum);
     if (!this.maxValueY) this.maxValueY = this.newMaxValueY;
 
@@ -139,31 +130,31 @@ class Chart {
     let result = [];
 
     if (this.spaceBetween) {
-      const externalFraction = this.chart.startX / this.spaceBetween / 100;
+      const externalFraction = chart.startX / this.spaceBetween / 100;
       const rangeToStart = (externalFraction - start) / externalFraction;
       const rangeToEnd = (externalFraction - (1 - end)) / externalFraction;
       this.startX = start >= externalFraction ? 0 : Math.round(chart.startX * rangeToStart);
-      console.log(end + "|" + rangeToEnd);
 
       this.endX =
         end <= 1 - externalFraction
           ? this.canvas.width
-          : chart.endX + chart.startX * (1 - rangeToEnd);
+          : Math.round(chart.endX + chart.startX * (1 - rangeToEnd));
     } else {
-      this.startX = this.chart.startX;
-      this.endX = this.chart.endX;
+      this.startX = chart.startX;
+      this.endX = chart.endX;
     }
 
-    //  Calculating data for start line
-    this.firstItemId = Math.floor(start * data.length);
-    const initialItemFraction = 1 / data.length;
+    //  Calculating data for first line
+    const totalLinesNum = data.length;
+    this.firstItemId = Math.floor(start * totalLinesNum);
+    const initialItemFraction = 1 / totalLinesNum;
     this.startFraction = 1 - (start - initialItemFraction * this.firstItemId) / initialItemFraction;
     const firstValue = data[this.firstItemId];
     const secondValue = data[this.firstItemId + 1];
     const startValue = firstValue + (secondValue - firstValue) * (1 - this.startFraction);
 
-    // Calculating data for end line
-    this.lastItemId = Math.ceil(end * data.length);
+    // Calculating data for last line
+    this.lastItemId = Math.ceil(end * totalLinesNum);
     const endFraction = 1 - (initialItemFraction * this.lastItemId - end) / initialItemFraction;
 
     //  Slicing array
@@ -239,19 +230,21 @@ class Chart {
     requestAnimationFrame(() => this.update(this.start, this.end));
   }
 
-  getMaxValue(data, start, end) {
-    let selectedCharts = [...this.sCharts];
+  getMaxValue() {
+    let sCharts = [...this.sCharts];
 
     this.an.fadeOutChart &&
-      selectedCharts.includes(this.an.fadeOutChart) &&
-      selectedCharts.splice(selectedCharts.indexOf(this.an.fadeOutChart), 1);
+      sCharts.includes(this.an.fadeOutChart) &&
+      sCharts.splice(sCharts.indexOf(this.an.fadeOutChart), 1);
 
     this.an.fadeInChart &&
-      !selectedCharts.includes(this.an.fadeInChart) &&
-      selectedCharts.push(this.an.fadeInChart);
+      !sCharts.includes(this.an.fadeInChart) &&
+      sCharts.push(this.an.fadeInChart);
 
     return Math.max(
-      ...selectedCharts.map(line => Math.max(...data.columns[line].slice(start, end)))
+      ...sCharts.map(line =>
+        Math.max(...this.data.columns[line].slice(this.firstItemId, this.lastItemId))
+      )
     );
   }
 
@@ -280,11 +273,6 @@ class Chart {
     }
     requestAnimationFrame(() => this.update(this.start, this.end));
   }
-
-  onMove = () => {};
-  onDown = () => {};
-  onUp = () => {};
-  onLeave = () => {};
 }
 
 export default Chart;
