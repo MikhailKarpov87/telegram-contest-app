@@ -137,14 +137,22 @@ class Chart {
   calcChartData(data, start, end) {
     const { chart } = this;
     let result = [];
-    const rangeToStart = this.spaceBetween / this.chart.width;
-    // startX = start > rangeToStart ? 0 : chart.startX * start;
-    // kinda working:
-    // this.startX =
-    //   start > rangeToStart ? 0 : this.chart.startX - (chart.width + this.chart.startX) * start;
-    // this.endX = end > 0.99 ? chart.endX : this.canvas.width;
-    this.startX = this.chart.startX;
-    this.endX = this.chart.endX;
+
+    if (this.spaceBetween) {
+      const externalFraction = this.chart.startX / this.spaceBetween / 100;
+      const rangeToStart = (externalFraction - start) / externalFraction;
+      const rangeToEnd = (externalFraction - (1 - end)) / externalFraction;
+      this.startX = start >= externalFraction ? 0 : Math.round(chart.startX * rangeToStart);
+      console.log(end + "|" + rangeToEnd);
+
+      this.endX =
+        end <= 1 - externalFraction
+          ? this.canvas.width
+          : chart.endX + chart.startX * (1 - rangeToEnd);
+    } else {
+      this.startX = this.chart.startX;
+      this.endX = this.chart.endX;
+    }
 
     //  Calculating data for start line
     this.firstItemId = Math.floor(start * data.length);

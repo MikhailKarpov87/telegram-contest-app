@@ -6,7 +6,6 @@ class MainChart extends Chart {
     super(options);
     this.hoverItem = null;
     this.dateItemsToShow = 6;
-    this.nthDate = 1;
     this.newDates = {};
     this.prevDates = {};
     this.nthDate = 0;
@@ -147,8 +146,16 @@ class MainChart extends Chart {
       currentId++;
       if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
+
       //  For output dates only in chart zone
-      // if (x < this.startX - 35) return;
+      // if (x < 0) return;
+      // if (x < this.startX - 45 && x >= 0 && alpha === 1) {
+      //   this.ctx.fillStyle = this.colors.axisFontColor(x / (this.startX + 35));
+      //   console.log(x);
+      // } else {
+      //   this.ctx.fillStyle = this.colors.axisFontColor(alpha);
+      // }
+
       this.ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
     this.ctx.restore();
