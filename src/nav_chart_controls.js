@@ -13,6 +13,7 @@ class NavChartControls extends Chart {
       hover: null,
       click: null
     };
+    this.multiTouch = false;
     this.minBarSize = 0.1;
     this.clickedOnStartBar = false;
     this.clickedOnEndBar = false;
@@ -107,8 +108,37 @@ class NavChartControls extends Chart {
     return false;
   }
 
+  handleMultiTouch = e => {
+    const leftTouchPos =
+      e.touches[0].pageX < e.touches[1].pageX
+        ? (e.touches[0].pageX - this.rect.left - this.chart.startX) / this.chart.width
+        : (e.touches[1].pageX - this.rect.left - this.chart.startX) / this.chart.width;
+
+    const rightTouchPos =
+      e.touches[0].pageX < e.touches[1].pageX
+        ? (e.touches[1].pageX - this.rect.left - this.chart.startX) / this.chart.width
+        : (e.touches[0].pageX - this.rect.left - this.chart.startX) / this.chart.width;
+
+    if (leftTouchPos < 0 || leftTouchPos > 1 || leftTouchPos > this.endBarPos - this.minBarSize) {
+      return;
+    }
+    if (
+      rightTouchPos < 0 ||
+      rightTouchPos > 1 ||
+      rightTouchPos < this.startBarPos + this.minBarSize
+    ) {
+      return;
+    }
+    this.startBarPos = leftTouchPos;
+    this.endBarPos = rightTouchPos;
+    requestAnimationFrame(() => this.update());
+  };
+
   onMove = e => {
     e.preventDefault();
+
+    if (this.multiTouch) this.handleMultiTouch(e);
+
     const x = e.touches ? e.touches[0].pageX : e.x;
     const y = e.touches ? e.touches[0].pageY : e.y;
     this.mouse.x = x - this.rect.left - this.chart.startX;
@@ -150,6 +180,11 @@ class NavChartControls extends Chart {
   onDown = e => {
     e.preventDefault();
 
+    if (e.touches && e.touches.length > 1) {
+      this.multiTouch = true;
+      return;
+    }
+
     const x = e.touches ? e.touches[0].pageX : e.x;
     this.mouse.x = x - this.rect.left - this.chart.startX;
 
@@ -166,6 +201,7 @@ class NavChartControls extends Chart {
   onUp = e => {
     e.preventDefault();
     this.mouse.click = false;
+    this.multiTouch = false;
   };
 
   onLeave = () => {
