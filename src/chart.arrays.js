@@ -11,7 +11,6 @@ class Chart {
     this.start = options.start;
     this.end = options.end;
     this.diff = 0;
-    this.title = options.title;
     this.colors = colors.dayMode;
     this.range = (this.end - this.start).toFixed(5);
     this.sCharts = options.selectedCharts;
@@ -50,10 +49,7 @@ class Chart {
     const { innerWidth, innerHeight } = window;
 
     //  Setting height based on viewport and height of controls elements
-    const selectorHeight = document.getElementsByClassName("charts-selector")[0].clientHeight;
-    let height = Math.round(
-      (innerHeight - (this.controlsDiv.clientHeight + selectorHeight + 50)) * this.ratio
-    );
+    let height = Math.round((innerHeight - this.controlsDiv.clientHeight - 50) * this.ratio);
 
     //  Settings min height for main_chart and nav_chart
     if (this.canvas.id === "main_chart" && height < 200)
@@ -92,13 +88,13 @@ class Chart {
       }
 
       this.maxValueY = Math.round(this.startValue + (this.diff * (100 - this.an.animChart)) / 100);
-      this.an.animChart -= 4;
+      this.an.animChart -= 5;
     }
     //  End animating charts
 
     //  Animating charts fade in/out
     if (this.an.animFadeChart < 100) {
-      this.an.animFadeChart -= 4;
+      this.an.animFadeChart -= 5;
 
       if (this.an.animFadeChart <= 0) {
         this.an.fadeOutChart &&
@@ -182,11 +178,11 @@ class Chart {
     slicedData.map((value, i) => {
       const y = Math.round(chart.startY - (value / this.maxValueY) * chart.height);
       const x = Math.round(this.startX + (i - 1 + this.startFraction) * this.spaceBetween);
-      result.push({ x, y });
+      result.push([x, y]);
     });
 
-    result[0] = { x: x0, y: y0 };
-    result[arraySize] = { x: xLast, y: yLast };
+    result[0] = [x0, y0];
+    result[arraySize] = [xLast, yLast];
 
     return result;
   }
@@ -204,9 +200,12 @@ class Chart {
 
     this.ctx.beginPath();
     this.ctx.moveTo(chart.startX, chart.startY);
-
+    // console.log(data);
     data.map((value, i) => {
-      const { x, y } = value;
+      // const { x, y } = value;
+      const x = value[0];
+      const y = value[1];
+
       i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
     }, 0);
 

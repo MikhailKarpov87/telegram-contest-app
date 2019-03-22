@@ -13,6 +13,7 @@ class MainChart extends Chart {
     this.itemsNum = this.allDates.length;
     this.updateDatesObject(this.start, this.end, this.allDates);
     this.createTooltip();
+    this.perfTest = 0;
   }
 
   update = (start, end) => {
@@ -147,15 +148,6 @@ class MainChart extends Chart {
       if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
 
-      //  For output dates only in chart zone
-      // if (x < 0) return;
-      // if (x < this.startX - 45 && x >= 0 && alpha === 1) {
-      //   this.ctx.fillStyle = this.colors.axisFontColor(x / (this.startX + 35));
-      //   console.log(x);
-      // } else {
-      //   this.ctx.fillStyle = this.colors.axisFontColor(alpha);
-      // }
-
       this.ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
     this.ctx.restore();
@@ -193,7 +185,11 @@ class MainChart extends Chart {
     for (let i = 1; i <= 5; i++) {
       const height = startY - (i * this.chart.height) / 5;
       const currentValue = (maxValueY * i) / 5;
-      this.ctx.fillText(currentValue, this.chart.startX, height - 0.5 * fontSize);
+      this.ctx.fillText(
+        this.generateYAxisLabel(currentValue),
+        this.chart.startX,
+        height - 0.5 * fontSize
+      );
       this.ctx.beginPath();
       this.ctx.moveTo(this.chart.startX, height);
       this.ctx.lineTo(this.chart.endX, height);
@@ -321,6 +317,12 @@ class MainChart extends Chart {
     }
 
     if (!this.dates) this.dates = this.newDates;
+  }
+
+  generateYAxisLabel(num) {
+    if (num > 1000000) return num / 1000000 + "M";
+    if (num > 1000) return num / 1000 + "K";
+    return num;
   }
 }
 

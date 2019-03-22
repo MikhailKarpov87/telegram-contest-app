@@ -1,17 +1,17 @@
 import createChartApp from "./chart_app";
 const url = "./chart_data.json";
-const id = 0;
+const appContainer = document.getElementById("app");
+let data;
 
-//  loads JSON data(url, chart_id)
+//  loading JSON data(url, chart_id)
 window.addEventListener("DOMContentLoaded", () => {
-  let data;
   const req = new XMLHttpRequest();
   req.overrideMimeType("application/json");
   req.open("GET", url, true);
   req.onload = function() {
-    const jsonResponse = JSON.parse(req.responseText);
-    data = parseData(jsonResponse, id);
-    new createChartApp({ title: "Chart1", data, appContainer: document.getElementById("app") });
+    data = parseData(JSON.parse(req.responseText));
+    createChartsSelector(data);
+    new createChartApp({ title: "Chart #1", data: data[0], appContainer });
   };
   req.send();
 });
@@ -45,15 +45,55 @@ window.addEventListener("DOMContentLoaded", () => {
 })();
 
 //  Parsing data function
-function parseData(json, id) {
-  const data = json[id];
-  let result = { ...data, columns: {} };
+function parseData(json) {
+  return json.map(data => {
+    let result = { ...data, columns: {} };
+    for (let item of data.columns) {
+      const name = item[0];
+      item.shift();
+      result.columns[name] = item;
+    }
+    return result;
+  });
+}
 
-  for (let item of data.columns) {
-    const name = item[0];
-    item.shift();
-    result.columns[name] = item;
+function createChartsSelector(data) {
+  const container = appContainer.children[0];
+  const chartsSelectorDiv = document.createElement("div");
+  chartsSelectorDiv.className = "charts-selector";
+  const select = document.createElement("select");
+  select.addEventListener("change", selectChart);
+
+  const option = document.createElement("option");
+  option.value = -1;
+  option.innerHTML = "Select chart...";
+  select.appendChild(option);
+
+  data.map((chart, id) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.innerHTML = "Chart #" + (id + 1);
+    select.appendChild(option);
+  });
+  chartsSelectorDiv.appendChild(select);
+  // appContainer.appendChild(chartsSelectorDiv);
+  document.body.prepend(chartsSelectorDiv);
+}
+
+function selectChart(e) {
+  const id = +e.target.value;
+  if (id === -1) return;
+
+  while (appContainer.firstChild) {
+    appContainer.removeChild(appContainer.firstChild);
   }
+  setDayMode();
 
-  return result;
+  const title = "Chart #" + (id + 1);
+  new createChartApp({ title, data: data[id], appContainer });
+}
+
+function setDayMode() {
+  document.body.style.backgroundColor = "#FFFFFF";
+  document.body.style.color = "#222222";
 }
