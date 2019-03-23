@@ -47,8 +47,7 @@ class MainChart extends Chart {
       this.drawErrorMessage();
       return;
     }
-
-    if (this.an.animChart < 100) {
+    if (this.an.animChart < 100 && isFinite(this.newAxisValue)) {
       this.drawYAxis("fadeOut");
       this.drawYAxis("fadeIn");
     } else {

@@ -7,6 +7,10 @@
   margin: 3vh 0;
 }
 
+div.app > div {
+  animation: fadeIn 0.5s;
+}
+
 .charts-selector {
   text-align: center;
   margin: 2vh auto;
@@ -236,6 +240,7 @@ input[type="checkbox"]:checked + label > span:before {
 @media screen and (max-height: 568px) {
   .tooltip {
     padding: 3px 5px;
+    text-align: center;
   }
 
   .tooltip .tooltip-info {
@@ -276,5 +281,13 @@ input[type="checkbox"]:checked + label > span:before {
 
   .nightmode_button {
     position: inherit;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    margin-top: 15vh;
+    filter: blur(2px);
+    opacity: 0;
   }
 }
