@@ -5,7 +5,7 @@ class MainChart extends Chart {
   constructor(options) {
     super(options);
     this.hoverItem = null;
-    this.dateItemsToShow = 6;
+    this.datesNum = 6;
     this.newDates = {};
     this.prevDates = {};
     this.nthDate = 0;
@@ -13,7 +13,6 @@ class MainChart extends Chart {
     this.itemsNum = this.allDates.length;
     this.updateDatesObject(this.start, this.end, this.allDates);
     this.createTooltip();
-    this.perfTest = 0;
   }
 
   update = (start, end) => {
@@ -40,11 +39,9 @@ class MainChart extends Chart {
 
     this.calcAnimations();
 
-    //  Start drawing from Y and X Axis
-
     this.drawMainAxis();
 
-    // error
+    // error message
     if (!this.sCharts.length) {
       this.hideTooltip();
       this.drawErrorMessage();
@@ -58,10 +55,15 @@ class MainChart extends Chart {
       this.drawYAxis();
     }
 
+    //  Draw hover grid line
+    this.hoverItem !== null &&
+      this.sCharts.length &&
+      this.drawHoverGrid(this.coords[this.sCharts[0]][this.hoverItem].x);
+
     //  Start drawing charts and hover grid/points
     this.sCharts.map(line => {
       this.coords[line] = this.calcChartData(this.data.columns[line], start, end);
-      this.hoverItem !== null && this.drawHoverGrid(this.coords[line][this.hoverItem].x);
+
       this.drawChart(this.coords[line], line, this.data.colors[line]);
 
       if (this.hoverItem !== null) {
@@ -100,13 +102,11 @@ class MainChart extends Chart {
 
     if (this.an.animFadeChart < 100 || this.an.animChart < 100) {
       setTimeout(requestAnimationFrame(() => this.update(this.start, this.end)), 16);
-      // requestAnimationFrame(() => this.update(this.start, this.end));
     }
     //  End of dates animation
   };
 
   onMove = e => {
-    // e.preventDefault();
     const x = e.touches ? e.touches[0].pageX : e.x;
     const y = e.touches ? e.touches[0].pageY : e.y;
 
@@ -129,74 +129,74 @@ class MainChart extends Chart {
   };
 
   drawMainAxis() {
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.chart.startX, this.chart.startY);
-    this.ctx.lineTo(this.chart.endX, this.chart.startY);
-    this.ctx.strokeStyle = this.colors.axisLinesColor;
-    this.ctx.stroke();
+    const { ctx, chart } = this;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(chart.startX, chart.startY);
+    ctx.lineTo(chart.endX, chart.startY);
+    ctx.strokeStyle = this.colors.axisLinesColor;
+    ctx.stroke();
   }
 
   drawDatesLine(dates, alpha) {
-    this.ctx.save();
+    const { ctx, colors } = this;
+    ctx.save();
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
-    this.ctx.font = `300 ${fontSize}px ${this.colors.axisFontsList}`;
-    this.ctx.fillStyle = this.colors.axisFontColor(alpha);
+    ctx.font = `300 ${fontSize}px ${colors.axisFontsList}`;
+    ctx.fillStyle = colors.axisFontColor(alpha);
     let currentId = this.firstItemId - 1;
-    this.coords[this.sCharts[0]].map((value, i) => {
+    this.coords[this.sCharts[0]].map((v, i) => {
       currentId++;
       if (!dates[currentId]) return;
       const x = Math.round(this.startX - 35 + (i - 1 + this.startFraction) * this.spaceBetween);
-
-      this.ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
+      ctx.fillText(dates[currentId], x, this.chart.startY + fontSize * 1.5);
     });
-    this.ctx.restore();
+    ctx.restore();
   }
 
   drawYAxis(anim) {
+    const { ctx, chart, colors, an } = this;
     let startY, maxValueY, alpha;
     const fontSize = Math.round(chartFontSize * +this.pixelRatio);
-    this.ctx.lineWidth = 1;
-    this.ctx.font = `300 ${fontSize}px ${this.colors.axisFontsList}`;
-    this.ctx.strokeStyle = this.colors.axisLinesColor;
+    ctx.lineWidth = 1;
+    ctx.font = `300 ${fontSize}px ${colors.axisFontsList}`;
+    ctx.strokeStyle = colors.axisLinesColor;
 
-    if (this.an.animChart < 100) {
+    if (an.animChart < 100) {
       const direction = this.newMaxValueY > this.maxValueY ? 1 : -1;
       if (anim === "fadeOut") {
-        startY =
-          this.chart.startY + direction * (1 - this.an.animChart / 100) * this.chart.height * 0.5;
+        startY = chart.startY + direction * (1 - an.animChart / 100) * chart.height * 0.5;
         maxValueY = this.prevAxisValue;
-        alpha = this.an.animChart / 100;
+        alpha = an.animChart / 100;
       }
       if (anim === "fadeIn") {
-        startY =
-          this.chart.startY - direction * (this.an.animChart / 100) * this.chart.height * 0.5;
-        alpha = 1 - this.an.animChart / 100;
+        startY = chart.startY - direction * (an.animChart / 100) * chart.height * 0.5;
+        alpha = 1 - an.animChart / 100;
         maxValueY = this.newAxisValue;
       }
     } else {
-      startY = this.chart.startY;
+      startY = chart.startY;
       maxValueY = this.maxValueY;
       alpha = 1;
     }
 
-    this.ctx.fillStyle = this.colors.axisFontColor(alpha);
+    ctx.fillStyle = colors.axisFontColor(alpha);
 
     for (let i = 1; i <= 5; i++) {
-      const height = startY - (i * this.chart.height) / 5;
+      const height = startY - (i * chart.height) / 5;
       const currentValue = (maxValueY * i) / 5;
-      this.ctx.fillText(
+      ctx.fillText(
         this.generateYAxisLabel(currentValue),
         this.chart.startX,
         height - 0.5 * fontSize
       );
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.chart.startX, height);
-      this.ctx.lineTo(this.chart.endX, height);
-      this.ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(chart.startX, height);
+      ctx.lineTo(chart.endX, height);
+      ctx.stroke();
     }
 
-    this.ctx.fillText(0, this.chart.startX, this.chart.startY - 0.5 * fontSize);
+    ctx.fillText(0, chart.startX, chart.startY - 0.5 * fontSize);
   }
 
   drawHoverPoint(coords, color) {
@@ -227,21 +227,22 @@ class MainChart extends Chart {
   }
 
   createTooltip() {
-    this.tooltip = document.createElement("div");
+    this.tooltip = dce("div");
+    this.tooltipDate = dce("div");
+    this.tooltipInfo = dce("div");
     this.tooltip.className = "tooltip";
-    this.tooltipDate = document.createElement("div");
     this.tooltipDate.className = "tooltip-date";
-    this.tooltipInfo = document.createElement("div");
     this.tooltipInfo.className = "tooltip-info";
-    this.tooltip.appendChild(this.tooltipDate);
-    this.tooltip.appendChild(this.tooltipInfo);
-    this.tooltip.style.backgroundColor = this.colors.tooltipBgColor;
-    this.tooltip.style.color = this.colors.tooltipColor;
-    this.tooltip.style.display = "none";
-    this.tooltip.style.mozBoxShadow = this.colors.tooltipShadow;
-    this.tooltip.style.webkitBoxShadow = this.colors.tooltipShadow;
-    this.tooltip.style.boxShadow = this.colors.tooltipShadow;
-    this.container.appendChild(this.tooltip);
+    ac(this.tooltip, this.tooltipDate);
+    ac(this.tooltip, this.tooltipInfo);
+    const { style } = this.tooltip;
+    style.backgroundColor = this.colors.tooltipBgColor;
+    style.color = this.colors.tooltipColor;
+    style.display = "none";
+    style.mozBoxShadow = this.colors.tooltipShadow;
+    style.webkitBoxShadow = this.colors.tooltipShadow;
+    style.boxShadow = this.colors.tooltipShadow;
+    ac(this.container, this.tooltip);
   }
 
   showTooltip() {
@@ -251,25 +252,25 @@ class MainChart extends Chart {
         60 +
         ((this.hoverItem - 1 + this.startFraction) * this.spaceBetween) / this.pixelRatio
     );
-    const date = new Date(this.data.columns.x[hoverItem]);
-    const label = weekdays[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate();
+    const label =
+      weekdays[new Date(this.data.columns.x[hoverItem]).getDay()] + ", " + this.allDates[hoverItem];
     this.tooltipDate.innerHTML = label;
     this.tooltipInfo.innerHTML = "";
     this.sCharts.map(line => {
       const number = this.data.columns[line][hoverItem];
       const label = this.data.names[line];
       const color = this.data.colors[line];
-      const infoDiv = document.createElement("div");
+      const infoDiv = dce("div");
       infoDiv.style.color = color;
-      const numDiv = document.createElement("div");
+      const numDiv = dce("div");
       numDiv.className = "num";
       numDiv.innerHTML = number;
-      const labelDiv = document.createElement("div");
+      const labelDiv = dce("div");
       labelDiv.className = "label";
       labelDiv.innerHTML = label;
-      infoDiv.appendChild(numDiv);
-      infoDiv.appendChild(labelDiv);
-      this.tooltipInfo.appendChild(infoDiv);
+      ac(infoDiv, numDiv);
+      ac(infoDiv, labelDiv);
+      ac(this.tooltipInfo, infoDiv);
     });
     this.tooltip.style.display = "block";
     this.tooltip.style.left = `${x}px`;
@@ -286,10 +287,9 @@ class MainChart extends Chart {
 
   createDatesObject = dates => {
     let result = {};
-
-    dates.map((value, i) => {
-      const dateValue = new Date(value);
-      result[i] = months[dateValue.getMonth()] + " " + dateValue.getDate();
+    dates.map((val, i) => {
+      const date = new Date(val);
+      result[i] = months[date.getMonth()] + " " + date.getDate();
     });
     return result;
   };
@@ -306,11 +306,12 @@ class MainChart extends Chart {
 
   updateDatesObject(start, end, dates) {
     const range = (end - start).toFixed(5);
+    const { datesNum } = this;
 
     let datesShown = Math.ceil(Object.keys(dates).length * range);
-    while (datesShown >= this.dateItemsToShow + 1 || datesShown < this.dateItemsToShow - 2) {
-      if (datesShown >= this.dateItemsToShow + 1) this.nthDate += 1;
-      if (datesShown < this.dateItemsToShow - 2) this.nthDate -= 1;
+    while (datesShown >= datesNum + 1 || datesShown < datesNum - 2) {
+      if (datesShown >= datesNum + 1) this.nthDate += 1;
+      if (datesShown < datesNum - 2) this.nthDate -= 1;
 
       this.newDates = this.makeDatesObject(this.allDates, this.nthDate);
       datesShown = Math.ceil(Object.keys(this.newDates).length * range);
@@ -320,10 +321,13 @@ class MainChart extends Chart {
   }
 
   generateYAxisLabel(num) {
-    if (num > 1000000) return num / 1000000 + "M";
-    if (num > 1000) return num / 1000 + "K";
+    if (num >= 10 ** 6) return num / 10 ** 6 + "M";
+    if (num >= 10 ** 3) return num / 10 ** 3 + "K";
     return num;
   }
 }
+
+const dce = elem => document.createElement(elem);
+const ac = (container, elem) => container.appendChild(elem);
 
 export default MainChart;

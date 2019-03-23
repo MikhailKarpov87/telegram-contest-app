@@ -17,32 +17,32 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 //  requestAnimationFrame polyfill for stable work
-(function() {
-  var lastTime = 0;
-  var vendors = ["ms", "moz", "webkit", "o"];
-  for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-    window.requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
-    window.cancelAnimationFrame =
-      window[vendors[x] + "CancelAnimationFrame"] ||
-      window[vendors[x] + "CancelRequestAnimationFrame"];
-  }
+// (function() {
+//   var lastTime = 0;
+//   var vendors = ["ms", "moz", "webkit", "o"];
+//   for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+//     window.requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
+//     window.cancelAnimationFrame =
+//       window[vendors[x] + "CancelAnimationFrame"] ||
+//       window[vendors[x] + "CancelRequestAnimationFrame"];
+//   }
 
-  if (!window.requestAnimationFrame)
-    window.requestAnimationFrame = function(callback, element) {
-      var currTime = new Date().getTime();
-      var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-      var id = window.setTimeout(function() {
-        callback(currTime + timeToCall);
-      }, timeToCall);
-      lastTime = currTime + timeToCall;
-      return id;
-    };
+//   if (!window.requestAnimationFrame)
+//     window.requestAnimationFrame = function(callback, element) {
+//       var currTime = new Date().getTime();
+//       var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+//       var id = window.setTimeout(function() {
+//         callback(currTime + timeToCall);
+//       }, timeToCall);
+//       lastTime = currTime + timeToCall;
+//       return id;
+//     };
 
-  if (!window.cancelAnimationFrame)
-    window.cancelAnimationFrame = function(id) {
-      clearTimeout(id);
-    };
-})();
+//   if (!window.cancelAnimationFrame)
+//     window.cancelAnimationFrame = function(id) {
+//       clearTimeout(id);
+//     };
+// })();
 
 //  Parsing data function
 function parseData(json) {
@@ -58,25 +58,23 @@ function parseData(json) {
 }
 
 function createChartsSelector(data) {
-  const container = appContainer.children[0];
-  const chartsSelectorDiv = document.createElement("div");
+  const chartsSelectorDiv = dce("div");
   chartsSelectorDiv.className = "charts-selector";
-  const select = document.createElement("select");
+  const select = dce("select");
   select.addEventListener("change", selectChart);
 
-  const option = document.createElement("option");
+  const option = dce("option");
   option.value = -1;
   option.innerHTML = "Select chart...";
-  select.appendChild(option);
+  ac(select, option);
 
   data.map((chart, id) => {
-    const option = document.createElement("option");
+    const option = dce("option");
     option.value = id;
     option.innerHTML = "Chart #" + (id + 1);
-    select.appendChild(option);
+    ac(select, option);
   });
-  chartsSelectorDiv.appendChild(select);
-  // appContainer.appendChild(chartsSelectorDiv);
+  ac(chartsSelectorDiv, select);
   document.body.prepend(chartsSelectorDiv);
 }
 
@@ -97,3 +95,6 @@ function setDayMode() {
   document.body.style.backgroundColor = "#FFFFFF";
   document.body.style.color = "#222222";
 }
+
+const dce = elem => document.createElement(elem);
+const ac = (container, elem) => container.appendChild(elem);

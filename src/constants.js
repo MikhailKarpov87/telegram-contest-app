@@ -32,6 +32,8 @@ export const colors = {
 
 export const chartFontSize = 14;
 
+export const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export const months = [
   "Jan",
   "Feb",
@@ -46,5 +48,3 @@ export const months = [
   "Nov",
   "Dec"
 ];
-
-export const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

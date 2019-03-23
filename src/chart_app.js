@@ -23,9 +23,9 @@ class createChartApp {
     const navChartContainer = dce("div");
     navChartContainer.id = "nav_chart_container";
 
-    container.appendChild(appTitle);
-    container.appendChild(mainChartContainer);
-    container.appendChild(navChartContainer);
+    ac(container, appTitle);
+    ac(container, mainChartContainer);
+    ac(container, navChartContainer);
 
     //  Adding checkboxes
     const checkboxDiv = dce("div");
@@ -35,7 +35,7 @@ class createChartApp {
 
     for (let name in lines) {
       const checkbox = createCheckbox(name);
-      checkboxDiv.appendChild(checkbox);
+      ac(checkboxDiv, checkbox);
     }
 
     function createCheckbox(id) {
@@ -52,15 +52,15 @@ class createChartApp {
       span.style.borderColor = data.colors[id];
       const i = dce("i");
       i.innerHTML = id;
-      label.appendChild(span);
-      label.appendChild(text);
-      container.appendChild(checkbox);
-      container.appendChild(label);
+      ac(label, span);
+      ac(label, text);
+      ac(container, checkbox);
+      ac(container, label);
       selectedCharts.push(id);
       return container;
     }
 
-    container.appendChild(checkboxDiv);
+    ac(container, checkboxDiv);
 
     //  Adding nightmode switch
     const nightmodeDiv = dce("div");
@@ -69,8 +69,8 @@ class createChartApp {
     nightmodeButton.className = "nightmode_button";
     nightmodeButton.innerHTML = "Switch to Night Mode";
     nightmodeButton.addEventListener("click", onNightmodeButtonClick);
-    nightmodeDiv.appendChild(nightmodeButton);
-    container.appendChild(nightmodeDiv);
+    ac(nightmodeDiv, nightmodeButton);
+    ac(container, nightmodeDiv);
 
     //    Creating instances of charts elements
     const mainChart = new MainChart({
@@ -122,7 +122,6 @@ class createChartApp {
 
     function onCheckboxChange(e) {
       const { checked, id } = e.target;
-      console.log(mainChart);
       mainChart.updateSelectedCharts(checked, id);
       navChart.updateSelectedCharts(checked, id);
     }
@@ -142,7 +141,7 @@ class createChartApp {
       navChartControls.switchNightMode(nightmodeIsOn);
     }
 
-    appContainer.appendChild(container);
+    ac(appContainer, container);
 
     setup();
 
@@ -151,5 +150,6 @@ class createChartApp {
 }
 
 const dce = elem => document.createElement(elem);
+const ac = (container, elem) => container.appendChild(elem);
 
 export default createChartApp;

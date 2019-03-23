@@ -8,13 +8,6 @@ module.exports = {
         uglifyOptions: {
           warnings: false,
           parse: {},
-          compress: {},
-          mangle: {
-            properties: false,
-            toplevel: false,
-            reserved: ["addEventListener", "window"],
-            keep_fnames: true
-          },
           output: null,
           toplevel: false,
           nameCache: null,

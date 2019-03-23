@@ -49,6 +49,10 @@ class Chart {
   resize = () => {
     const { innerWidth, innerHeight } = window;
 
+    //  Disabling resizing for mobile devices for avoiding extra redrawings
+    if (this.is_touch_device() && this.innerWidth === innerWidth) return;
+    this.innerWidth = window.innerWidth;
+
     //  Setting height based on viewport and height of controls elements
     const selectorHeight = document.getElementsByClassName("charts-selector")[0].clientHeight;
     let height = Math.round(
@@ -253,7 +257,7 @@ class Chart {
   }
 
   getYAxisMaxValue(max) {
-    const divider = Math.max(10, 10 ** (max.toString().length - 1));
+    const divider = max > 100 && max < 100 ? 50 : Math.max(10, 10 ** (max.toString().length - 1));
     const closestMax = Math.ceil(max / divider) * divider;
     const maxValue = Math.max(closestMax, Math.round(max / divider) * divider);
     return maxValue;
@@ -269,13 +273,24 @@ class Chart {
     this.colors = nightmodeIsOn ? colors.nightMode : colors.dayMode;
 
     if (this.tooltip) {
-      this.tooltip.style.backgroundColor = this.colors.tooltipBgColor;
-      this.tooltip.style.color = this.colors.tooltipColor;
-      this.tooltip.style.mozBoxShadow = this.colors.tooltipShadow;
-      this.tooltip.style.webkitBoxShadow = this.colors.tooltipShadow;
-      this.tooltip.style.boxShadow = this.colors.tooltipShadow;
+      const { style } = this.tooltip;
+      const { colors } = this;
+      style.backgroundColor = colors.tooltipBgColor;
+      style.color = colors.tooltipColor;
+      style.mozBoxShadow = colors.tooltipShadow;
+      style.webkitBoxShadow = colors.tooltipShadow;
+      style.boxShadow = colors.tooltipShadow;
     }
     requestAnimationFrame(() => this.update(this.start, this.end));
+  }
+
+  is_touch_device() {
+    try {
+      document.createEvent("TouchEvent");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
 

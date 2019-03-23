@@ -7,7 +7,8 @@ class NavChartControls extends Chart {
     this.startBarPos = options.start;
     this.endBarPos = options.end;
     this.barWidth = 6;
-    this.mouse = {
+    //  Mouse/pointer data
+    this.m = {
       x: undefined,
       y: undefined,
       hover: null,
@@ -15,9 +16,6 @@ class NavChartControls extends Chart {
     };
     this.multiTouch = false;
     this.minBarSize = 0.1;
-    this.clickedOnStartBar = false;
-    this.clickedOnEndBar = false;
-    this.clickedOnCenterBar = false;
     this.pixelRatio = 1;
   }
 
@@ -39,7 +37,7 @@ class NavChartControls extends Chart {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const startPos = this.startBarPos * this.chart.width + this.startX;
     const endPos = this.endBarPos * this.chart.width + this.chart.startX;
-    this.drawBoundingArea(Math.round(startPos), Math.round(endPos));
+    this.drawOverlay(Math.round(startPos), Math.round(endPos));
     this.drawSlider(Math.round(startPos), Math.round(endPos));
   }
 
@@ -57,7 +55,7 @@ class NavChartControls extends Chart {
     this.ctx.fillRect(start + this.barWidth, this.startY, end - start - this.barWidth - 2, -2);
   }
 
-  drawBoundingArea(start, end) {
+  drawOverlay(start, end) {
     this.ctx.fillStyle = this.colors.navOverlayColor;
     //  Left Area
     this.ctx.fillRect(this.startX - 1, 0, start - this.startX + 1, this.startY);
@@ -66,45 +64,44 @@ class NavChartControls extends Chart {
     this.ctx.fillRect(end + 2, 0, this.endX - end, this.startY);
   }
 
-  isHoverSlider(x) {
+  isHover(x) {
     //  Outside of Chart
-    if (this.mouse.y < 0 && this.mouse.y > this.startY) {
-      if (this.mouse.hover) document.body.style.cursor = "auto";
-      this.mouse.hover = null;
+    if (this.m.y < 0 && this.m.y > this.startY) {
+      if (this.m.hover) document.body.style.cursor = "auto";
+      this.m.hover = null;
       return false;
     }
 
     // On Chart zone
     if (x > 0 && x < this.startPos - 7 && x > this.endPos + this.barWidth + 10 && x < this.endX) {
-      this.mouse.hover = "outOfSlidebar";
+      this.m.hover = "outOfSlidebar";
       document.body.style.cursor = "col-resize";
       return true;
     }
 
     // StartBar
     if (x > this.startPos - 7 && x < this.startPos + this.barWidth + 10) {
-      this.mouse.hover = "startBarPos";
+      this.m.hover = "startBarPos";
       document.body.style.cursor = "col-resize";
       return true;
     }
 
     //  EndBar
     if (x > this.endPos - 7 && x < this.endPos + this.barWidth + 10) {
-      this.mouse.hover = "endBarPos";
+      this.m.hover = "endBarPos";
       document.body.style.cursor = "col-resize";
       return true;
     }
 
     //  CenterBar
     if (x >= this.startPos + this.barWidth + 10 && x <= this.endPos - 7) {
-      this.mouse.hover = "centerBarPos";
-
+      this.m.hover = "centerBarPos";
       document.body.style.cursor = "all-scroll";
       return true;
     }
 
     document.body.style.cursor = "auto";
-    this.mouse.hover = false;
+    this.m.hover = false;
     return false;
   }
 
@@ -141,27 +138,27 @@ class NavChartControls extends Chart {
 
     const x = e.touches ? e.touches[0].pageX : e.x;
     const y = e.touches ? e.touches[0].pageY : e.y;
-    this.mouse.x = x - this.rect.left - this.chart.startX;
-    this.mouse.y = y + this.rect.top + this.endY - this.chart.startY;
-    this.isHoverSlider(this.mouse.x);
+    this.m.x = x - this.chart.startX;
+    this.m.y = y + this.rect.top + this.endY - this.chart.startY;
+    this.isHover(this.m.x);
 
-    if (this.mouse.click) {
-      const clickXPos = this.mouse.x / this.chart.width;
+    if (this.m.click) {
+      const clickXPos = this.m.x / this.chart.width;
 
-      switch (this.mouse.click) {
+      switch (this.m.click) {
         case "startBarPos":
           if (clickXPos < 0 || clickXPos > 1 || clickXPos > this.endBarPos - this.minBarSize) {
             return;
           }
+          if (clickXPos < 0.01) this.startBarPos = 0;
           this.startBarPos = clickXPos;
-          requestAnimationFrame(() => this.update());
           break;
         case "endBarPos":
           if (clickXPos < 0 || clickXPos > 1 || clickXPos < this.startBarPos + this.minBarSize) {
             return;
           }
+          if (clickXPos > 0.99) this.endBarPos = 1;
           this.endBarPos = clickXPos;
-          requestAnimationFrame(() => this.update());
           break;
         case "centerBarPos":
           const deltaX = this.centerClickOffsetX - clickXPos;
@@ -171,43 +168,42 @@ class NavChartControls extends Chart {
           this.startBarPos -= deltaX;
           this.endBarPos -= deltaX;
           this.centerClickOffsetX = clickXPos;
-          requestAnimationFrame(() => this.update());
           break;
       }
+      requestAnimationFrame(() => this.update());
     }
   };
 
   onDown = e => {
     e.preventDefault();
 
-    if (e.touches && e.touches.length > 1) {
+    //  Multi-touch event
+    if (e.touches && e.touches.length === 2) {
       this.multiTouch = true;
       return;
     }
 
     const x = e.touches ? e.touches[0].pageX : e.x;
-    this.mouse.x = x - this.rect.left - this.chart.startX;
+    this.m.x = x - this.rect.left - this.chart.startX;
 
-    this.isHoverSlider(this.mouse.x);
+    this.isHover(this.m.x);
 
-    if (this.mouse.hover) {
-      this.mouse.click = this.mouse.hover;
-
-      if (this.mouse.hover === "centerBarPos")
-        this.centerClickOffsetX = this.mouse.x / this.chart.width;
+    if (this.m.hover) {
+      this.m.click = this.m.hover;
+      if (this.m.hover === "centerBarPos") this.centerClickOffsetX = this.m.x / this.chart.width;
     }
   };
 
   onUp = e => {
     e.preventDefault();
-    this.mouse.click = false;
+    this.m.click = false;
     this.multiTouch = false;
   };
 
   onLeave = () => {
     document.body.style.cursor = "auto";
-    this.mouse.click = false;
-    this.mouse.hover = false;
+    this.m.click = false;
+    this.m.hover = false;
   };
 }
 
