@@ -29,7 +29,6 @@ module.exports = {
   devServer: {
     contentBase: "./dist",
     port: 3000,
-    // host: "localhost"
-    host: "192.168.1.116"
+    host: "localhost"
   }
 };

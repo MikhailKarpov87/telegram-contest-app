@@ -1,6 +1,8 @@
 import createChartApp from "./chart_app";
 const url = "./chart_data.json";
 const appContainer = document.getElementById("app");
+const dce = elem => document.createElement(elem);
+const ac = (container, elem) => container.appendChild(elem);
 let data;
 
 //  loading JSON data(url, chart_id)
@@ -16,34 +18,6 @@ window.addEventListener("DOMContentLoaded", () => {
   req.send();
 });
 
-//  requestAnimationFrame polyfill for stable work
-// (function() {
-//   var lastTime = 0;
-//   var vendors = ["ms", "moz", "webkit", "o"];
-//   for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-//     window.requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
-//     window.cancelAnimationFrame =
-//       window[vendors[x] + "CancelAnimationFrame"] ||
-//       window[vendors[x] + "CancelRequestAnimationFrame"];
-//   }
-
-//   if (!window.requestAnimationFrame)
-//     window.requestAnimationFrame = function(callback, element) {
-//       var currTime = new Date().getTime();
-//       var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-//       var id = window.setTimeout(function() {
-//         callback(currTime + timeToCall);
-//       }, timeToCall);
-//       lastTime = currTime + timeToCall;
-//       return id;
-//     };
-
-//   if (!window.cancelAnimationFrame)
-//     window.cancelAnimationFrame = function(id) {
-//       clearTimeout(id);
-//     };
-// })();
-
 //  Parsing data function
 function parseData(json) {
   return json.map(data => {
@@ -57,14 +31,17 @@ function parseData(json) {
   });
 }
 
+const chartsSelectorDiv = dce("div");
 function createChartsSelector(data) {
-  const chartsSelectorDiv = dce("div");
   chartsSelectorDiv.className = "charts-selector";
+
   const select = dce("select");
   select.addEventListener("change", selectChart);
 
   const option = dce("option");
   option.value = -1;
+  option.selected = true;
+
   option.innerHTML = "Select chart...";
   ac(select, option);
 
@@ -79,6 +56,7 @@ function createChartsSelector(data) {
 }
 
 function selectChart(e) {
+  e.preventDefault();
   const id = +e.target.value;
   if (id === -1) return;
 
@@ -95,6 +73,3 @@ function setDayMode() {
   document.body.style.backgroundColor = "#FFFFFF";
   document.body.style.color = "#222222";
 }
-
-const dce = elem => document.createElement(elem);
-const ac = (container, elem) => container.appendChild(elem);

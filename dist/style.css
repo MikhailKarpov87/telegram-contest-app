@@ -8,7 +8,7 @@
 }
 
 div.app > div {
-  animation: fadeIn 0.5s;
+  animation: fadeIn 0.6s;
 }
 
 .charts-selector {
@@ -42,6 +42,7 @@ body {
 h2 {
   margin: 0 5vw;
 }
+
 #controls {
   margin: 0 5vw;
   z-index: 2;
@@ -95,6 +96,7 @@ h2 {
   flex-wrap: wrap;
   justify-content: space-between;
 }
+
 .tooltip-info > div {
   flex: 1 50%;
 }
@@ -184,37 +186,6 @@ input[type="checkbox"]:checked + label > span:before {
   animation: checkbox-check 125ms 250ms cubic-bezier(0.4, 0, 0.23, 1) forwards;
 }
 
-@keyframes shrink-bounce {
-  0% {
-    transform: scale(1);
-  }
-  33% {
-    transform: scale(0.7);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes checkbox-check {
-  0% {
-    width: 0;
-    height: 0;
-    border-color: #ffffff;
-    transform: translate3d(0, 0, 0) rotate(45deg);
-  }
-  33% {
-    width: 0.2em;
-    height: 0;
-    transform: translate3d(0, 0, 0) rotate(45deg);
-  }
-  100% {
-    width: 0.2em;
-    height: 0.5em;
-    border-color: #ffffff;
-    transform: translate3d(0, -0.5em, 0) rotate(45deg);
-  }
-}
-
 .nightmode_switch {
   margin: 3vh auto;
   text-align: center;
@@ -286,8 +257,39 @@ input[type="checkbox"]:checked + label > span:before {
 
 @keyframes fadeIn {
   from {
-    margin-top: 15vh;
     filter: blur(2px);
     opacity: 0;
+  }
+}
+
+@keyframes shrink-bounce {
+  0% {
+    transform: scale(1);
+  }
+  33% {
+    transform: scale(0.7);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes checkbox-check {
+  0% {
+    width: 0;
+    height: 0;
+    border-color: #ffffff;
+    transform: translate3d(0, 0, 0) rotate(45deg);
+  }
+  33% {
+    width: 0.2em;
+    height: 0;
+    transform: translate3d(0, 0, 0) rotate(45deg);
+  }
+  100% {
+    width: 0.2em;
+    height: 0.5em;
+    border-color: #ffffff;
+    transform: translate3d(0, -0.5em, 0) rotate(45deg);
   }
 }

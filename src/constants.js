@@ -1,5 +1,3 @@
-// export const axisFontColor = "#96A2AA";
-
 const axisFontsList = `-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial,
     sans-serif`;
 
